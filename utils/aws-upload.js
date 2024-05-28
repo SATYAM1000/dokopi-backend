@@ -9,10 +9,10 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const S3client = new S3Client({
-  region: process.env.REGION_AWS,
+  region: process.env.AWS_REGION,
   credentials: {
-    accessKeyId: process.env.ACCESS_KEY_AWS,
-    secretAccessKey: process.env.SECRET_KEY_AWS,
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
   },
 });
 
@@ -45,7 +45,7 @@ export const uploadToS3 = async (localFilePath) => {
   const fileStream = fs.createReadStream(localFilePath);
 
   const uploadParams = {
-    Bucket: process.env.BUCKET_NAME_AWS,
+    Bucket: process.env.AWS_BUCKET_NAME,
     Body: fileStream,
     Key: path.basename(localFilePath),
   };
@@ -56,7 +56,7 @@ export const uploadToS3 = async (localFilePath) => {
     const data = await S3client.send(command);
     fs.unlinkSync(localFilePath);
     const presignedURL = await generatePresignedURL(
-      process.env.BUCKET_NAME_AWS,
+      process.env.AWS_BUCKET_NAME,
       path.basename(localFilePath)
     );
     return presignedURL;
