@@ -66,10 +66,18 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeReviews: [
       { type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" },
     ],
+    storeWalletBalance: {
+      type: Number,
+      default: 0,
+    },
     storeAdmins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     storeProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     storeCoupons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Coupon" }],
     storeCreatedDate: { type: Date, default: Date.now() },
+    socketId: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );

@@ -27,6 +27,14 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
     },
+    isStoreOwner: {
+      type: String,
+      default: false,
+    },
+    socketId: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,
