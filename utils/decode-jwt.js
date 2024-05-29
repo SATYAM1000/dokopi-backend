@@ -8,11 +8,16 @@ export const decodeJWT = async (token) => {
       : process.env.JWT_SALT_DEV;
 
   try {
-    const decodedToken = await decode({
-      token: token,
-      salt: SALT_KEY,
-      secret: process.env.JWT_SECRET,
-    });
+    if(process.env.NODE_ENV === "production"){
+      return await decode({ token: token, salt: process.env.JWT_SALT, secret: process.env.JWT_SECRET });
+    }
+
+    const decodedToken = await decode({ token: token, salt: process.env.JWT_SALT_DEV, secret: process.env.JWT_SECRET });
+    // const decodedToken = await decode({
+    //   token: token,
+    //   salt: SALT_KEY,
+    //   secret: process.env.JWT_SECRET,
+    // });
 
     return decodedToken;
   } catch (error) {
