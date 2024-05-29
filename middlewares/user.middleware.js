@@ -22,7 +22,7 @@ export const verifyUser = async (req, res, next) => {
       });
     }
     const decoded = await decodeJWT(jwtToken);
-    console.log("decoded ", decoded)
+    console.log("decoded----------------> ", decoded)
 
   
     const user = await User.findById(decoded?.sub);
