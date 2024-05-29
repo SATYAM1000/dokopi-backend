@@ -6,6 +6,7 @@ const AUTH_ERROR_MESSAGE = "Please authenticate using a valid token!";
 export const verifyUser = async (req, res, next) => {
   try {
     const token = req.header("Authorization");
+    console.log("visited-----> 1")
     if (!token) {
       return res.status(401).json({
         msg: AUTH_ERROR_MESSAGE,
@@ -21,6 +22,8 @@ export const verifyUser = async (req, res, next) => {
       });
     }
     const decoded = await decodeJWT(jwtToken);
+    console.log("decoded ", decoded)
+
   
     const user = await User.findById(decoded?.sub);
     if (!user) {
