@@ -14,6 +14,8 @@ import { logger } from "./config/logger.config.js";
 import { socketHandlers } from "./config/socket.config.js";
 
 const app = express();
+app.set('trust proxy', true);
+
 const server = createServer(app);
 export const io = new Server(server, {
   cors: {
