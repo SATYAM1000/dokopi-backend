@@ -12,6 +12,7 @@ export const verifyUser = async (req, res, next) => {
         success: false,
       });
     }
+    console.log("token is ", token);
     const jwtToken = token.split(" ")[1];
     if (!jwtToken) {
       return res.status(401).json({
@@ -20,6 +21,7 @@ export const verifyUser = async (req, res, next) => {
       });
     }
     const decoded = await decodeJWT(jwtToken);
+    console.log("decoded is ", decoded);
     const user = await User.findById(decoded?.sub);
     if (!user) {
       return res.status(401).json({
