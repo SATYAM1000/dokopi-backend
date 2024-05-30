@@ -9,6 +9,6 @@ import { verifyUser } from "../../middlewares/user.middleware.js";
 const paymentRouter = express.Router();
 
 paymentRouter.post("/user-checkout", verifyUser, checkout);
-paymentRouter.post("/verify", verifyUser, paymentVerification);
+paymentRouter.post("/verify", paymentVerification);
 paymentRouter.get("/razorpay-key", verifyUser, getRazorpayKey);
 export default paymentRouter;
