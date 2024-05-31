@@ -5,6 +5,7 @@ import { decryptCartItems } from "../../utils/decrypt-cart-items.js";
 import { Order } from "../../models/order.model.js";
 import mongoose from "mongoose";
 import { generateReceipt } from "../../utils/generate-receipt.js";
+import { getNextSequenceValue } from "../../utils/next-seq-generator.js";
 
 export const checkout = async (req, res) => {
   const { amount, cartItems } = req.body;
@@ -46,6 +47,17 @@ export const checkout = async (req, res) => {
 
     const decryptedCartItems = decryptCartItems(cartItems);
 
+    if (!decryptedCartItems) {
+      throw new Error("Error while decrypting cart items");
+    }
+
+    const orderNumber = await getNextSequenceValue("orderID");
+    console.log("order number is ", orderNumber);
+
+    const formattedOrderNumber = `#order_${orderNumber
+      .toString()
+      .padStart(6, "0")}`;
+
     const newOrder = new Order({
       userId,
       storeId,
@@ -54,6 +66,7 @@ export const checkout = async (req, res) => {
       orderStatus: "pending",
       paymentStatus: "pending",
       razorpayOrderId: order.id,
+      orderNumber: formattedOrderNumber,
     });
 
     await newOrder.save();
@@ -80,8 +93,7 @@ export const paymentVerification = async (req, res) => {
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         success: false,
-        msg:
-          "razorpay_order_id, razorpay_payment_id, razorpay_signature are required",
+        msg: "razorpay_order_id, razorpay_payment_id, razorpay_signature are required",
       });
     }
 
