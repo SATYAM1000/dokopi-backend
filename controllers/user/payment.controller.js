@@ -159,7 +159,7 @@ export const getRazorpayKey = async (req, res) => {
 
 export const verifyPaymentRefrenceId = async (req, res) => {
   try {
-    const { paymentRefrenceId } = req.query;
+    const { paymentRefrenceId, userId } = req.query;
     if (!paymentRefrenceId) {
       return res.status(400).json({
         success: false,
@@ -178,7 +178,7 @@ export const verifyPaymentRefrenceId = async (req, res) => {
       });
     }
 
-    if (order.userId.toString() !== req.user._id.toString()) {
+    if (order.userId.toString() !== userId) {
       return res.status(403).json({
         success: false,
         msg: "Unauthorized access",
