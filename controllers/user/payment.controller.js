@@ -13,21 +13,21 @@ export const checkout = async (req, res) => {
   if (!amount || amount < 1 || !cartItems || cartItems.length < 1) {
     return res.status(400).json({
       success: false,
-      message: "Amount and cartItems are required",
+      msg: "Amount and cartItems are required",
     });
   }
 
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({
       success: false,
-      message: "Invalid User ID",
+      msg: "Invalid User ID",
     });
   }
 
   if (!mongoose.Types.ObjectId.isValid(storeId)) {
     return res.status(400).json({
       success: false,
-      message: "Invalid Store ID",
+      msg: "Invalid Store ID",
     });
   }
   try {
@@ -67,7 +67,7 @@ export const checkout = async (req, res) => {
     logger.error("Error while creating order: ", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      msg: error.message,
     });
   }
 };
@@ -80,7 +80,7 @@ export const paymentVerification = async (req, res) => {
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         success: false,
-        message:
+        msg:
           "razorpay_order_id, razorpay_payment_id, razorpay_signature are required",
       });
     }
@@ -130,7 +130,7 @@ export const paymentVerification = async (req, res) => {
     logger.error(`Error during payment verification: ${error.message}`);
     res.status(500).json({
       success: false,
-      message: error.message,
+      msg: error.message,
     });
   }
 };
@@ -152,7 +152,48 @@ export const getRazorpayKey = async (req, res) => {
     logger.error("Error while getting Razorpay key: ", error.message);
     res.status(500).json({
       success: false,
-      message: error.message,
+      msg: error.message,
+    });
+  }
+};
+
+export const verifyPaymentRefrenceId = async (req, res) => {
+  try {
+    const { paymentRefrenceId } = req.query;
+    if (!paymentRefrenceId) {
+      return res.status(400).json({
+        success: false,
+        msg: "paymentRefrenceId is required",
+      });
+    }
+
+    const order = await Order.findOne({
+      razorpayPaymentId: paymentRefrenceId,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        msg: "Payment not found",
+      });
+    }
+
+    if (order.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        msg: "Unauthorized access",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      order: order,
+    });
+  } catch (error) {
+    logger.error(`Error while verifying payment refrence id: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      msg: error.message,
     });
   }
 };
