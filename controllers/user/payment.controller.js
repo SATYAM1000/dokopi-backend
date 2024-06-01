@@ -33,13 +33,13 @@ export const checkout = async (req, res) => {
   }
   try {
     const receipt = generateReceipt(userId);
+
     const options = {
-      amount: Number(amount) * 100,
+      amount: Number(Math.round(amount)) * 100,
       currency: "INR",
       receipt: receipt,
       payment_capture: 1,
     };
-
     const order = await instance.orders.create(options);
     if (!order) {
       throw new Error("Error while creating order");
@@ -52,7 +52,6 @@ export const checkout = async (req, res) => {
     }
 
     const orderNumber = await getNextSequenceValue("orderID");
-    console.log("order number is ", orderNumber);
 
     const formattedOrderNumber = `#order_${orderNumber
       .toString()
