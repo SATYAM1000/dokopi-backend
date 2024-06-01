@@ -1,6 +1,7 @@
 import { XeroxStore } from "../../models/store.model.js";
 import { logger } from "../../config/logger.config.js";
 import { validateFields } from "../../utils/validate-fields.js";
+import mongoose from "mongoose";
 
 export const createNewXeroxStore = async (req, res) => {
   try {
@@ -180,4 +181,36 @@ export const deleteMerchantStoreById = async (req, res) => {
   }
 };
 
+export const getStorePricing = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
 
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      msg: "Store pricing fetched successfully!",
+      success: true,
+      data: store.storePrices,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store pricing: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
