@@ -139,9 +139,13 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
       });
     }
 
-    const store = await XeroxStore.findById(storeId).select(
-      "-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner"
-    );
+    const store = await XeroxStore.findById(storeId).select("-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner").populate({
+      path: 'storeReviews',
+      populate: {
+        path: 'userId'
+      }
+    })
+      ;
 
     if (!store) {
       return res.status(404).json({
