@@ -4,7 +4,11 @@ import mongoose from "mongoose";
 export const checkUserActiveOrders = async (req, res) => {
   try {
     const userId = req.user.id;
-    const activeOrders = await Order.find({ userId: userId, isActive: true });
+    const activeOrders = await Order.find({
+      userId: userId,
+      isActive: true,
+      paymentStatus: "paid",
+    });
     if (!activeOrders || !activeOrders.length) {
       return res.status(404).json({
         msg: "No active orders found!",
