@@ -31,6 +31,7 @@
     "next-auth": "^5.0.0-beta.17",
     "nodemon": "^3.1.0",
     "page-count": "^0.0.4",
+    "pdfkit": "^0.15.0",
     "razorpay": "^2.9.4",
     "socket.io": "^4.7.5",
     "uuid": "^9.0.1",

@@ -74,5 +74,7 @@ app.use("/api/v1/user/payment", paymentRouter);
 import userOrderRouter from "./routes/user/order.route.js";
 app.use("/api/v1/user/orders", userOrderRouter);
 
+import invoiceRouter from "./routes/user/invoice.route.js";
+app.use("/api/v1/invoice", invoiceRouter);
 
 socketHandlers(io, logger);
