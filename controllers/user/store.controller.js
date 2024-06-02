@@ -139,13 +139,27 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
       });
     }
 
-    const store = await XeroxStore.findById(storeId).select("-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner").populate({
-      path: 'storeReviews',
-      populate: {
-        path: 'userId'
-      }
-    })
-      ;
+    const pageNumber = req.query.pageNumber
+      ? parseInt(req.query.pageNumber)
+      : 1;
+
+    const pageSize = 4;
+
+    const store = await XeroxStore.findById(storeId)
+      .select(
+        "-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner"
+      )
+      .populate({
+        path: "storeReviews",
+        populate: {
+          path: "userId",
+        },
+        options: {
+          sort: { createdAt: -1 },
+          skip: (pageNumber - 1) * pageSize,
+          limit: pageSize,
+        },
+      });
 
     if (!store) {
       return res.status(404).json({
@@ -168,10 +182,20 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
       });
     }
 
+    const totalReviewsCount = await StoreReview.countDocuments({
+      storeId: storeId,
+    });
+    const hasMoreReviews = totalReviewsCount > pageNumber * pageSize;
+
     return res.status(200).json({
       success: true,
       msg: "Store details fetched successfully!",
       data: store,
+      pagination: {
+        hasMoreReviews: hasMoreReviews,
+        totalReviewsCount: totalReviewsCount,
+        currentPage: pageNumber,
+      },
     });
   } catch (error) {
     logger.error(`Error while fetching single store details: ${error.message}`);
