@@ -210,8 +210,7 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
 //GET /api/v1/user/stores/search?storeName=Xerox&city=New%20York&services=Printing,Scanning
 export const searchStores = async (req, res) => {
   try {
-    const { storeName, storeLandmark, city, services, storePhoneNumber } =
-      req.query;
+    const { Name: storeName, Location: storeLandmark, city, services, Phone: storePhoneNumber } = req.query;
 
     if (!Object.keys(req.query).length) {
       return res.status(400).json({
@@ -280,7 +279,7 @@ export const searchStores = async (req, res) => {
       .limit(options.limit);
 
     if (!stores.length) {
-      return res.status(404).json({
+      return res.status(200).json({
         msg: "Stores not found!",
         success: false,
       });
