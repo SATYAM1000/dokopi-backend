@@ -51,7 +51,7 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeCurrentStatus: {
       type: { type: String, enum: ["online", "offline"], default: "offline" },
     },
-    storeImagesURL: [{ type: String }],
+    storeImagesURL: [{ type: String , default:"https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQ4HtE_O8tvs-TlF27vWMWHjxoCQ7HmFmZHBkZpKt1n4PFIN-aN&usqp=CAU"}],
     storePrices: {
       binding: { type: Number },
       lamination: { type: Number },
