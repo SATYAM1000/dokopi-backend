@@ -36,28 +36,22 @@ async function generatePresignedURL(
 }
 
 export const uploadToS3 = async (localFilePath) => {
-  logger.error("File path is required");
   if (!localFilePath) {
     throw new Error("File path is required");
   }
-  logger.error("new error 1");
 
   const fileStream = fs.createReadStream(localFilePath);
-  logger.error("new error 2");
 
   const uploadParams = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Body: fileStream,
     Key: path.basename(localFilePath),
   };
-  logger.error("new error 3");
 
   const uploadOptions = {
     partSize: 100 * 1024 * 1024, // 100 MB per part
     queueSize: 4, // 4 parts concurrently
   };
-
-  logger.error("new error 4");
 
   try {
     const parallelUpload = new Upload({
@@ -67,22 +61,17 @@ export const uploadToS3 = async (localFilePath) => {
       ...uploadOptions,
     });
 
-    logger.error("new error 5");
-
     const data = await parallelUpload.done();
-    logger.error("new error 6");
     fs.unlinkSync(localFilePath);
 
     const presignedURL = await generatePresignedURL(
       process.env.AWS_BUCKET_NAME,
       path.basename(localFilePath)
     );
-    logger.error("new error 7");
 
     return presignedURL;
   } catch (error) {
     fs.unlinkSync(localFilePath);
-    
     logger.error(`Error while uploading file: ${error.message}`);
     throw error;
   }
