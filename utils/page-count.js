@@ -28,7 +28,6 @@ export const pageCounter = async (filePath, extension) => {
 
       return pageCount;
     } else if (["jpg", "jpeg", "png"].includes(extension)) {
-      // For image files, return a default page count of 1
       return 1;
     } else {
       logger.error(`Unsupported file extension: ${extension}`);

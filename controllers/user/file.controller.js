@@ -13,21 +13,27 @@ export const uploadFileToS3 = async (req, res) => {
   try {
     if (req.fileValidationError) {
       fs.unlinkSync(req.file.path);
+      logger.error("file validation error");
       return res.status(400).json({
         msg: req.fileValidationError,
         success: false,
       });
     }
 
-    if (!req.file)
+    if (!req.file){
+      fs.unlinkSync(req.file.path);
+      logger.error("File not found!");
       return res.status(400).json({
         msg: "File not found!",
         success: false,
       });
+    }
 
     const extension = req.file.originalname.split(".").pop();
     const pageCount = await pageCounter(req.file.path, extension);
     if (!pageCount) {
+      fs.unlinkSync(req.file.path);
+      logger.error("page count error");
       return res.status(500).json({
         msg: "Internal server error!",
         success: false,
@@ -36,8 +42,9 @@ export const uploadFileToS3 = async (req, res) => {
     const uploadedFile = await uploadToS3(req.file.path);
     if (!uploadedFile) {
       fs.unlinkSync(req.file.path);
+      logger.error("upload to s3 error");
       return res.status(500).json({
-        msg: "Internal server error!",
+        msg: "Internal server error !",
         success: false,
       });
     }
