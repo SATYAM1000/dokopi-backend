@@ -42,6 +42,8 @@ const orderSchema = new mongoose.Schema(
     },
     phonePeTransactionId: {
       type: String,
+      unqiue: true,
+      required: true,
     },
     totalPrice: {
       type: Number,

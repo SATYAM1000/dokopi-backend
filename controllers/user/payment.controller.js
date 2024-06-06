@@ -210,3 +210,52 @@ export const checkPaymentStatus = async (req, res) => {
     });
   }
 };
+
+export const paymentVerification = async (req, res) => {
+  try {
+    const { paymentRefrenceId, userId } = req.query;
+    if (!paymentRefrenceId || !userId) {
+      return res.status(400).json({
+        success: false,
+        msg: "paymentRefrenceId and userId are required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid userId",
+      });
+    }
+
+    const order = await Order.findOne({
+      userId: userId,
+      phonePeTransactionId: paymentRefrenceId,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        msg: "Order not found",
+      });
+    }
+
+    if (order.paymentStatus === "success") {
+      return res.status(200).json({
+        success: true,
+        msg: "Payment verified successfully",
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        msg: "Payment verification failed",
+      });
+    }
+  } catch (error) {
+    logger.error("Error while verifying payment: ", error);
+    res.status(500).json({
+      success: false,
+      msg: error.message,
+    });
+  }
+};
