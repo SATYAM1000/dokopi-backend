@@ -1,14 +1,31 @@
-import { instance } from "../../config/razorpay-instance.config.js";
 import crypto from "crypto";
 import { logger } from "../../config/logger.config.js";
 import { decryptCartItems } from "../../utils/decrypt-cart-items.js";
 import { Order } from "../../models/order.model.js";
 import mongoose from "mongoose";
-import { generateReceipt } from "../../utils/generate-receipt.js";
 import { getNextSequenceValue } from "../../utils/next-seq-generator.js";
+import axios from "axios";
+
+const merchantId =
+  process.env.NODE_ENV === "production"
+    ? process.env.PHONE_PE_LIVE_MERCHANT_ID
+    : process.env.PHONE_PE_TEST_MERCHANT_ID;
+const saltKey =
+  process.env.NODE_ENV === "production"
+    ? process.env.PHONE_PE_LIVE_SALT_KEY
+    : process.env.PHONE_PE_TEST_SALT_KEY;
+const keyIndex =
+  process.env.NODE_ENV === "production"
+    ? process.env.PHONE_PE_LIVE_SALT_INDEX
+    : process.env.PHONE_PE_TEST_SALT_INDEX;
+const domain =
+  process.env.NODE_ENV === "production"
+    ? "https://api.dokopi.com"
+    : "http://localhost:4000";
 
 export const checkout = async (req, res) => {
-  const { amount, cartItems } = req.body;
+  const { name, amount, cartItems, merchantTransactionId, merchantUserId } =
+    req.body;
   const { userId, storeId } = req.query;
 
   if (!amount || amount < 1 || !cartItems || cartItems.length < 1) {
@@ -32,19 +49,6 @@ export const checkout = async (req, res) => {
     });
   }
   try {
-    const receipt = generateReceipt(userId);
-
-    const options = {
-      amount: Number(Math.round(amount)) * 100,
-      currency: "INR",
-      receipt: receipt,
-      payment_capture: 1,
-    };
-    const order = await instance.orders.create(options);
-    if (!order) {
-      throw new Error("Error while creating order");
-    }
-
     const decryptedCartItems = decryptCartItems(cartItems);
 
     if (!decryptedCartItems) {
@@ -64,17 +68,65 @@ export const checkout = async (req, res) => {
       totalPrice: amount,
       orderStatus: "pending",
       paymentStatus: "pending",
-      razorpayOrderId: order.id,
+      phonePeTransactionId: merchantTransactionId,
+      phonePeMerchantUserId: merchantUserId,
       orderNumber: formattedOrderNumber,
     });
 
     await newOrder.save();
 
-    res.status(200).json({
-      success: true,
-      order: order,
-      currentOrderId: newOrder._id,
-    });
+    const data = {
+      merchantId: merchantId,
+      merchantTransactionId: merchantTransactionId,
+      merchantUserId: merchantUserId,
+      name: name,
+      amount: Number(amount) * 100,
+      redirectUrl: `${domain}/api/v1/user/payment/status?id=${merchantTransactionId}`,
+      redirectMode: "POST",
+      paymentInstrument: {
+        type: "PAY_PAGE",
+      },
+    };
+
+    const payload = JSON.stringify(data);
+    const payloadMain = Buffer.from(payload).toString("base64");
+    const string = payloadMain + "/pg/v1/pay" + saltKey;
+    const sha256 = crypto.createHash("sha256").update(string).digest("hex");
+    const checksum = sha256 + "###" + keyIndex;
+    const prod_URL =
+      process.env.NODE_ENV === "production"
+        ? process.env.PHONE_PE_PROD_URL
+        : process.env.PHONE_PE_TEST_URL;
+
+    const options = {
+      method: "POST",
+      url: prod_URL,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+        "X-VERIFY": checksum,
+      },
+      data: {
+        request: payloadMain,
+      },
+    };
+
+    axios
+      .request(options)
+      .then(function (response) {
+        return res.status(200).json({
+          success: true,
+          data: response.data,
+          msg: "Order created successfully",
+        });
+      })
+      .catch(function (error) {
+        logger.error("Error while creating order: ", error);
+        res.status(500).json({
+          success: false,
+          msg: error.message,
+        });
+      });
   } catch (error) {
     logger.error("Error while creating order: ", error);
     res.status(500).json({
@@ -84,124 +136,74 @@ export const checkout = async (req, res) => {
   }
 };
 
-export const paymentVerification = async (req, res) => {
+export const checkPaymentStatus = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
-
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    const { id } = req.query;
+    const merchantTransactionId = id;
+    if (!merchantTransactionId) {
       return res.status(400).json({
         success: false,
-        msg: "razorpay_order_id, razorpay_payment_id, razorpay_signature are required",
+        msg: "merchantTransactionId is required",
       });
     }
 
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const string =
+      `/pg/v1/status/${merchantId}/${merchantTransactionId}` + saltKey;
+    const sha256 = crypto.createHash("sha256").update(string).digest("hex");
+    const checksum = sha256 + "###" + keyIndex;
 
-    const razorpay_secret =
+    const URL =
       process.env.NODE_ENV === "production"
-        ? process.env.RAZORPAY_KEY_SECRET
-        : process.env.TEST_RAZORPAY_KEY_SECRET;
+        ? "https://api.phonepe.com/apis/hermes/pg/v1"
+        : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1";
 
-    const expectedSignature = crypto
-      .createHmac("sha256", razorpay_secret)
-      .update(body.toString())
-      .digest("hex");
+    const options = {
+      method: "GET",
+      url: `${URL}/status/${merchantId}/${merchantTransactionId}`,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+        "X-VERIFY": checksum,
+        "X-MERCHANT-ID": `${merchantId}`,
+      },
+    };
 
-    const isAuthentic = expectedSignature === razorpay_signature;
-
-    if (isAuthentic) {
-      const order = await Order.findOneAndUpdate(
-        { razorpayOrderId: razorpay_order_id },
-        {
-          paymentStatus: "paid",
-          orderStatus: "processing",
-          razorpayPaymentId: razorpay_payment_id,
-          razorpaySignature: razorpay_signature,
-        },
-        { new: true }
-      );
-
-      if (!order) {
-        throw new Error("Order not found");
-      }
-
-      logger.info(`Payment successful for order ${razorpay_order_id}`);
-
-      res.redirect(
-        `${process.env.PAYMENT_SUCCESS_URL}?reference=${razorpay_payment_id}`
-      );
-    } else {
-      logger.warn(`Invalid payment signature for order ${razorpay_order_id}`);
-      res.redirect(
-        `${process.env.PAYMENT_FAILURE_URL}?reference=${razorpay_payment_id}`
-      );
-    }
+    axios
+      .request(options)
+      .then(async (response) => {
+        if (response.data.success === true) {
+          const order = await Order.findOneAndUpdate(
+            { phonePeTransactionId: merchantTransactionId },
+            { paymentStatus: "success" },
+            { new: true }
+          );
+          const url =
+            process.env.NODE_ENV === "production"
+              ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
+              : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
+          return res.redirect(url);
+        } else {
+          const order = await Order.findOneAndUpdate(
+            { phonePeTransactionId: merchantTransactionId },
+            { paymentStatus: "failed" },
+            { new: true }
+          );
+          const url =
+            process.env.NODE_ENV === "production"
+              ? `https://dokopi.com/payment/failure?id=${merchantTransactionId}`
+              : `http://localhost:3000/payment/failure?id=${merchantTransactionId}`;
+          return res.redirect(url);
+        }
+      })
+      .catch((error) => {
+        logger.error("Error while checking phonepe payment status: ", error);
+        res.status(500).json({
+          success: false,
+          msg: error.message,
+        });
+      });
   } catch (error) {
-    logger.error(`Error during payment verification: ${error.message}`);
-    res.status(500).json({
-      success: false,
-      msg: error.message,
-    });
-  }
-};
-
-export const getRazorpayKey = async (req, res) => {
-  try {
-    if (process.env.NODE_ENV === "production") {
-      res.status(200).json({
-        success: true,
-        key: process.env.RAZORPAY_KEY_ID,
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        key: process.env.TEST_RAZORPAY_KEY_ID,
-      });
-    }
-  } catch (error) {
-    logger.error("Error while getting Razorpay key: ", error.message);
-    res.status(500).json({
-      success: false,
-      msg: error.message,
-    });
-  }
-};
-
-export const verifyPaymentRefrenceId = async (req, res) => {
-  try {
-    const { paymentRefrenceId, userId } = req.query;
-    if (!paymentRefrenceId) {
-      return res.status(400).json({
-        success: false,
-        msg: "paymentRefrenceId is required",
-      });
-    }
-
-    const order = await Order.findOne({
-      razorpayPaymentId: paymentRefrenceId,
-    });
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        msg: "Payment not found",
-      });
-    }
-
-    if (order.userId.toString() !== userId) {
-      return res.status(403).json({
-        success: false,
-        msg: "Unauthorized access",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      order: order,
-    });
-  } catch (error) {
-    logger.error(`Error while verifying payment refrence id: ${error.message}`);
+    logger.error("Error while checking phonepe payment status: ", error);
     res.status(500).json({
       success: false,
       msg: error.message,

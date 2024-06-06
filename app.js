@@ -37,10 +37,10 @@ app.use((req, res, next) => {
 });
 
 app.use(cors());
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
-app.use(helmet());
 app.use(hpp());
 app.use(ExpressMongoSanitize());
 
@@ -78,3 +78,4 @@ import invoiceRouter from "./routes/user/invoice.route.js";
 app.use("/api/v1/invoice", invoiceRouter);
 
 socketHandlers(io, logger);
+

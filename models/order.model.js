@@ -36,14 +36,11 @@ const orderSchema = new mongoose.Schema(
         fileColorPagesToPrint: { type: [String] },
       },
     ],
-    razorpayOrderId: {
+    phonePeMerchantUserId: {
       type: String,
       required: true,
     },
-    razorpayPaymentId: {
-      type: String,
-    },
-    razorpaySignature: {
+    phonePeTransactionId: {
       type: String,
     },
     totalPrice: {
@@ -64,7 +61,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid"],
+      enum: ["pending", "success", "failed", "cancelled", "refunded"],
       default: "pending",
     },
     isActive: {

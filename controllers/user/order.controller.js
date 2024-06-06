@@ -7,7 +7,7 @@ export const checkUserActiveOrders = async (req, res) => {
     const activeOrders = await Order.find({
       userId: userId,
       isActive: true,
-      paymentStatus: "paid",
+      paymentStatus: "success",
     });
     if (!activeOrders || !activeOrders.length) {
       return res.status(404).json({
@@ -41,7 +41,7 @@ export const fetchUserOrdersHistory = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const orders = await Order.find({ userId: userId })
-      .select("-__v -userId -storeId -razorpaySignature -razorpayOrderId")
+      .select("-__v -userId -storeId -phonePeMerchantUserId")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -85,7 +85,7 @@ export const getOrderDetailsById = async (req, res) => {
     }
 
     const order = await Order.findOne({ _id: orderId })
-      .select("-__v -userId -razorpaySignature -razorpayOrderId -updatedAt")
+      .select("-__v -userId -phonePeMerchantUserId -updatedAt")
       .populate({
         path: "storeId",
         select:

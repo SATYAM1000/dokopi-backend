@@ -40,13 +40,6 @@ export const generateInvoiceByOrderId = async (req, res) => {
       `${Date.now()}-${sanitizedOrderNumber}.pdf`
     );
 
-    if (order.paymentStatus !== "paid") {
-      return res.status(400).json({
-        msg: "Payment not successful!",
-        success: false,
-      });
-    }
-
     const userInfo = await User.findById(order.userId);
     if (!userInfo) {
       return res.status(404).json({
@@ -68,8 +61,11 @@ export const generateInvoiceByOrderId = async (req, res) => {
     await createInvoice(invoice, filePath);
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=${sanitizedOrderNumber}.pdf`);
-    
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${sanitizedOrderNumber}.pdf`
+    );
+
     res.download(filePath, `${sanitizedOrderNumber}.pdf`, async (err) => {
       if (err) {
         logger.error("Error downloading the file:", err);
@@ -121,7 +117,7 @@ function generateInvoiceData(order, userInfo, storeInfo) {
     Status: order.paymentStatus,
     Order_no: order.orderNumber,
     order_date: order.createdAt.toLocaleDateString(),
-    paymentId: order.razorpayPaymentId,
+    paymentId: order.phonePeTransactionId,
     status: order.paymentStatus,
     storeName: storeInfo.storeDetails.storeName,
     storePhoneNumber: storeInfo.storeDetails.storePhoneNumber,

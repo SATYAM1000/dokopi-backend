@@ -16,7 +16,6 @@ const userFilesRouter = Router();
 // Endpoint to upload a file to S3
 userFilesRouter.post(
   "/upload",
-  verifyUser,
   upload.single("file"),
   uploadFileToS3
 );

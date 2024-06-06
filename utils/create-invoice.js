@@ -13,7 +13,6 @@ export function createInvoice(invoice, filePath) {
       return reject(new Error("Invoice data or file path is missing"));
     }
 
-    console.log("file path 2 is ", filePath);
     let doc = new PDFDocument({ size: "A4", margin: 50 });
 
     generateHeader(doc);
@@ -26,12 +25,10 @@ export function createInvoice(invoice, filePath) {
 
     doc.end();
     stream.on('finish', () => {
-      console.log("PDF creation finished");
       resolve();
     });
 
     stream.on('error', (err) => {
-      console.error("Error creating PDF:", err);
       reject(err);
     });
   });
