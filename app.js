@@ -77,5 +77,10 @@ app.use("/api/v1/user/orders", userOrderRouter);
 import invoiceRouter from "./routes/user/invoice.route.js";
 app.use("/api/v1/invoice", invoiceRouter);
 
+
+import locationRouter from "./routes/location/locationfromname.js";
+app.use("/api/v1", locationRouter)
+
+
 socketHandlers(io, logger);
 
