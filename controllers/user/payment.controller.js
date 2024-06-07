@@ -5,6 +5,7 @@ import { Order } from "../../models/order.model.js";
 import mongoose from "mongoose";
 import { getNextSequenceValue } from "../../utils/next-seq-generator.js";
 import axios from "axios";
+import { io } from "../../app.js";
 
 const merchantId =
   process.env.NODE_ENV === "production"
@@ -177,6 +178,8 @@ export const checkPaymentStatus = async (req, res) => {
             { paymentStatus: "success" },
             { new: true }
           );
+
+          io.emit("paymentSuccess", { storeId: order.storeId });
           const url =
             process.env.NODE_ENV === "production"
               ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
