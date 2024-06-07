@@ -131,7 +131,6 @@ export const fetchNearestStores = async (req, res) => {
 export const fetchSingleStoreDetailsById = async (req, res) => {
   try {
     const { storeId } = req.params;
-
     if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
         msg: "Invalid store id!",
@@ -142,6 +141,8 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
     const pageNumber = req.query.pageNumber
       ? parseInt(req.query.pageNumber)
       : 1;
+
+    
 
     const pageSize = 4;
 
@@ -156,10 +157,9 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
         },
         options: {
           sort: { createdAt: -1 },
-          skip: (pageNumber - 1) * pageSize,
-          limit: pageSize,
         },
       });
+
 
     if (!store) {
       return res.status(404).json({
@@ -210,7 +210,13 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
 //GET /api/v1/user/stores/search?storeName=Xerox&city=New%20York&services=Printing,Scanning
 export const searchStores = async (req, res) => {
   try {
-    const { Name: storeName, Location: storeLandmark, city, services, Phone: storePhoneNumber } = req.query;
+    const {
+      Name: storeName,
+      Location: storeLandmark,
+      city,
+      services,
+      Phone: storePhoneNumber,
+    } = req.query;
 
     if (!Object.keys(req.query).length) {
       return res.status(400).json({

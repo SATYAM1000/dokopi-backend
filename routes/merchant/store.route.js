@@ -11,4 +11,6 @@ merchantStoreRouter.post("/create-new-store",verifyMerchant, createNewXeroxStore
 // Endpoint to fetch store pricing
 merchantStoreRouter.get("/pricing/:storeId", getStorePricing);
 
+
+
 export default merchantStoreRouter;

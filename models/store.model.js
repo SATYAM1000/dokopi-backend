@@ -51,7 +51,13 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeCurrentStatus: {
       type: { type: String, enum: ["online", "offline"], default: "offline" },
     },
-    storeImagesURL: [{ type: String , default:"https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQ4HtE_O8tvs-TlF27vWMWHjxoCQ7HmFmZHBkZpKt1n4PFIN-aN&usqp=CAU"}],
+    storeImagesURL: [
+      {
+        type: String,
+        default:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQ4HtE_O8tvs-TlF27vWMWHjxoCQ7HmFmZHBkZpKt1n4PFIN-aN&usqp=CAU",
+      },
+    ],
     storePrices: {
       binding: { type: Number },
       lamination: { type: Number },
@@ -72,6 +78,8 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeAdmins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     storeProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     storeCoupons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Coupon" }],
+    isStoreOpen: { type: Boolean, default: true },
+    storeOpenedAt: { type: Date, default: Date.now() },
     storeCreatedDate: { type: Date, default: Date.now() },
     socketId: {
       type: String,

@@ -12,6 +12,7 @@ export const verifyMerchant = async (req, res, next) => {
         success: false,
       });
     }
+
     const jwtToken = token.split(" ")[1];
     if (!jwtToken) {
       return res.status(401).json({
@@ -21,6 +22,7 @@ export const verifyMerchant = async (req, res, next) => {
     }
     const decoded = await decodeJWT(jwtToken);
     const user = await User.findById(decoded?.sub);
+
     if (!user) {
       return res.status(401).json({
         msg: "User not found",
