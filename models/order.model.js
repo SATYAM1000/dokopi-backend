@@ -74,6 +74,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    isViewed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

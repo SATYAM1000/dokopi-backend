@@ -1,5 +1,5 @@
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
-import { getXeroxStoreOrdersById } from "../../controllers/merchant/order.controller.js";
+import { getXeroxStoreOrdersById, isOrderViewed } from "../../controllers/merchant/order.controller.js";
 import { Router } from "express";
 
 export const merchantOrderRouter = Router();
@@ -10,3 +10,6 @@ merchantOrderRouter.get(
   verifyMerchant,
   getXeroxStoreOrdersById
 );
+
+// Endpoint to check user order viewed status
+merchantOrderRouter.put("/is-viewed/:orderId", verifyMerchant, isOrderViewed);
