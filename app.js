@@ -71,6 +71,9 @@ app.use("/api/v1/merchant/store", merchantStoreRouter);
 import { merchantOrderRouter } from "./routes/merchant/order.route.js";
 app.use("/api/v1/merchant/orders", merchantOrderRouter);
 
+import { chartRouter } from "./routes/merchant/chart.route.js";
+app.use("/api/v1/chart", chartRouter);
+
 import paymentRouter from "./routes/user/payment.route.js";
 app.use("/api/v1/user/payment", paymentRouter);
 
