@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 import { getNextSequenceValue } from "../../utils/next-seq-generator.js";
 import axios from "axios";
 import { io } from "../../app.js";
+import { XeroxStore } from "../../models/store.model.js";
+import { User } from "../../models/user.model.js";
 
 const merchantId =
   process.env.NODE_ENV === "production"
@@ -50,6 +52,32 @@ export const checkout = async (req, res) => {
     });
   }
   try {
+    const userInfo = await User.findOne({
+      _id: userId,
+    });
+
+    if (!userInfo) {
+      return res.status(400).json({
+        success: false,
+        msg: "User not found",
+      });
+    }
+
+    const storeInfo = await XeroxStore.findById(storeId);
+    if (!storeInfo) {
+      return res.status(400).json({
+        success: false,
+        msg: "Store not found",
+      });
+    }
+
+    if (storeInfo.storeCurrentStatus !== "open") {
+      return res.status(400).json({
+        success: false,
+        msg: "Store is not open",
+      });
+    }
+
     const decryptedCartItems = decryptCartItems(cartItems);
 
     if (!decryptedCartItems) {
@@ -193,8 +221,8 @@ export const checkPaymentStatus = async (req, res) => {
           );
           const url =
             process.env.NODE_ENV === "production"
-              ? `https://dokopi.com/payment/failure?id=${merchantTransactionId}`
-              : `http://localhost:3000/payment/failure?id=${merchantTransactionId}`;
+              ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
+              : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
           return res.redirect(url);
         }
       })

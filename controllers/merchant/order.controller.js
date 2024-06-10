@@ -6,6 +6,8 @@ import { XeroxStore } from "../../models/store.model.js";
 export const getXeroxStoreOrdersById = async (req, res) => {
   try {
     const storeId = req.params.storeId;
+    const { date } = req.query; 
+
     if (!mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
         msg: "Invalid store ID!",
@@ -21,21 +23,46 @@ export const getXeroxStoreOrdersById = async (req, res) => {
       });
     }
 
-    const orders = await Order.find({
+    const query = {
       storeId: storeId,
       paymentStatus: "success",
-    })
-      .select("-__v -userId -storeId -phonePeMerchantUserId -updatedAt ")
+    };
+    if (date) {
+      const selectedDate = new Date(date);
+      if (isNaN(selectedDate.getTime())) {
+        return res.status(400).json({
+          msg: "Invalid date format!",
+          success: false,
+        });
+      }
+
+      const startOfDay = new Date(date);
+      startOfDay.setUTCHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+
+      query.createdAt = {
+        $gte: startOfDay,
+        $lt: endOfDay,
+      };
+    } else {
+      query.createdAt = {
+        $gte: store.storeOpenedAt,
+      };
+    }
+
+    const orders = await Order.find(query)
+      .select("-__v -userId -storeId -phonePeMerchantUserId -updatedAt")
       .sort({ createdAt: -1 })
       .populate("userId", "name email phone image")
       .exec();
 
-    // const orders = await Order.find({
-    //   storeId: storeId,
-    //   createdAt: { $gte: store.storeOpenedAt },
-    // })
-    //   .populate("userId", "name email phone image")
-    //   .exec();
+    if (!orders || !orders.length) {
+      return res.status(404).json({
+        msg: "No orders found!",
+        success: false,
+      });
+    }
 
     return res.status(200).json({
       msg: "Orders fetched successfully!",
@@ -74,7 +101,7 @@ export const isOrderViewed = async (req, res) => {
 
     if (!order.isViewed) {
       order.isViewed = true;
-      order.orderStatus="processing";
+      order.orderStatus = "processing";
       await order.save();
 
       return res.status(200).json({

@@ -85,13 +85,18 @@ export const createNewXeroxStore = async (req, res) => {
   }
 };
 
-//PUT: /api/change-store-status/:storeId/:storeStatus
-export const changeCurrentStoreStatus = async (req, res) => {
+
+export const changeStoreStatus = async (req, res) => {
   try {
     const storeId = req.params.storeId;
-    const userId = req.user._id;
-    const storeStatus = req.params.storeStatus;
+    const state = req.params.state;
 
+    if (state !== "open" && state !== "closed") {
+      return res.status(400).json({
+        msg: "Invalid store status!",
+        success: false,
+      });
+    }
     if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
         msg: "Invalid store id!",
@@ -99,35 +104,38 @@ export const changeCurrentStoreStatus = async (req, res) => {
       });
     }
 
-    if (
-      !storeStatus ||
-      (storeStatus !== "online" && storeStatus !== "offline")
-    ) {
-      return res.status(400).json({
-        msg: "Invalid store status!",
-        success: false,
-      });
-    }
-
-    const updatedStore = await XeroxStore.findOneAndUpdate(
-      { _id: storeId, storeOwner: userId },
-      { storeCurrentStatus: storeStatus },
-      { new: true }
-    );
-
-    if (!updatedStore) {
+    const store = await XeroxStore.findById(storeId);
+    if (!store) {
       return res.status(404).json({
-        msg: "Store not found or you are not authorized to perform this action!",
+        msg: "Store not found!",
         success: false,
       });
     }
 
-    return res.status(200).json({
-      msg: `Store marked as ${storeStatus} successfully!`,
-      success: true,
-    });
+    store.storeCurrentStatus = state;
+    if (state === "open") {
+      store.storeOpenedAt = new Date();
+      store.isStoreOpen = true;
+      await store.save();
+      return res.status(200).json({
+        msg: "Store opened successfully",
+        success: true,
+        storeStatus: store.storeStatus,
+        state: store.storeCurrentStatus,
+      });
+    } else {
+      store.storeOpenedAt = null;
+      store.isStoreOpen = false;
+      await store.save();
+      return res.status(200).json({
+        msg: "Store closed successfully",
+        success: true,
+        storeStatus: store.storeStatus,
+        state: store.storeCurrentStatus,
+      });
+    }
   } catch (error) {
-    logger.error(`Error while changing current store status: ${error.message}`);
+    logger.error(`Error while changing store status: ${error.message}`);
     return res.status(500).json({
       msg: "Internal server error!",
       error: error.message,

@@ -49,7 +49,9 @@ const xeroxStoreSchema = new mongoose.Schema(
       isStoreBlocked: { type: Boolean, default: false },
     },
     storeCurrentStatus: {
-      type: { type: String, enum: ["online", "offline"], default: "offline" },
+      type: String,
+      enum: ["open", "closed"],
+      default: "closed",
     },
     storeImagesURL: [
       {
