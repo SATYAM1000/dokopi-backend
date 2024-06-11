@@ -14,57 +14,65 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     const timeRange = req.params.timeRange;
     let start, end, prevStart, prevEnd;
 
+    const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+
     switch (timeRange) {
       case 'today':
-        start = moment().startOf('day');
-        end = moment().endOf('day');
-        prevStart = moment().subtract(1, 'day').startOf('day');
-        prevEnd = moment().subtract(1, 'day').endOf('day');
+        start = moment().startOf('day').utcOffset('+05:30');
+        end = moment().endOf('day').utcOffset('+05:30');
+        prevStart = moment().subtract(1, 'day').startOf('day').utcOffset('+05:30');
+        prevEnd = moment().subtract(1, 'day').endOf('day').utcOffset('+05:30');
         break;
       case 'yesterday':
-        start = moment().subtract(1, 'day').startOf('day');
-        end = moment().subtract(1, 'day').endOf('day');
-        prevStart = moment().subtract(2, 'day').startOf('day');
-        prevEnd = moment().subtract(2, 'day').endOf('day');
+        start = moment().subtract(1, 'day').startOf('day').utcOffset('+05:30');
+        end = moment().subtract(1, 'day').endOf('day').utcOffset('+05:30');
+        prevStart = moment().subtract(2, 'day').startOf('day').utcOffset('+05:30');
+        prevEnd = moment().subtract(2, 'day').endOf('day').utcOffset('+05:30');
         break;
       case 'thisweek':
-        start = moment().startOf('week');
-        end = moment();
-        prevStart = moment().subtract(1, 'week').startOf('week');
-        prevEnd = moment().subtract(1, 'week').endOf('week');
+        start = moment().startOf('week').utcOffset('+05:30');
+        end = moment().utcOffset('+05:30');
+        prevStart = moment().subtract(1, 'week').startOf('week').utcOffset('+05:30');
+        prevEnd = moment().subtract(1, 'week').endOf('week').utcOffset('+05:30');
         break;
       case 'thismonth':
-        start = moment().startOf('month');
-        end = moment();
-        prevStart = moment().subtract(1, 'month').startOf('month');
-        prevEnd = moment().subtract(1, 'month').endOf('month');
+        start = moment().startOf('month').utcOffset('+05:30');
+        end = moment().utcOffset('+05:30');
+        prevStart = moment().subtract(1, 'month').startOf('month').utcOffset('+05:30');
+        prevEnd = moment().subtract(1, 'month').endOf('month').utcOffset('+05:30');
         break;
       case 'thisyear':
-        start = moment().startOf('year');
-        end = moment();
-        prevStart = moment().subtract(1, 'year').startOf('year');
-        prevEnd = moment().subtract(1, 'year').endOf('year');
+        start = moment().startOf('year').utcOffset('+05:30');
+        end = moment().utcOffset('+05:30');
+        prevStart = moment().subtract(1, 'year').startOf('year').utcOffset('+05:30');
+        prevEnd = moment().subtract(1, 'year').endOf('year').utcOffset('+05:30');
         break;
       case 'custom':
-        start = moment(req.query.start);
-        end = moment(req.query.end);
-        prevStart = moment(req.query.prevStart);
-        prevEnd = moment(req.query.prevEnd);
+        start = moment(req.query.start).utcOffset('+05:30');
+        end = moment(req.query.end).utcOffset('+05:30');
+        prevStart = moment(req.query.prevStart).utcOffset('+05:30');
+        prevEnd = moment(req.query.prevEnd).utcOffset('+05:30');
         break;
       default:
         throw new Error('Invalid time range');
     }
 
+    // Convert the start and end times back to UTC for querying the database
+    const startUTC = start.utc();
+    const endUTC = end.utc();
+    const prevStartUTC = prevStart.utc();
+    const prevEndUTC = prevEnd.utc();
+
     // Fetch orders for the current period
     const currentOrders = await Order.find({
       storeId: storeId,
-      createdAt: { $gte: start.toDate(), $lte: end.toDate() }
+      createdAt: { $gte: startUTC.toDate(), $lte: endUTC.toDate() }
     });
 
     // Fetch orders for the previous period
     const previousOrders = await Order.find({
       storeId: storeId,
-      createdAt: { $gte: prevStart.toDate(), $lte: prevEnd.toDate() }
+      createdAt: { $gte: prevStartUTC.toDate(), $lte: prevEndUTC.toDate() }
     });
 
     // Calculate total orders, earnings, and pages printed for the current period
@@ -90,15 +98,13 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     const percentageChangeOrders = calculatePercentageChange(currentTotalOrders, previousTotalOrders);
     const percentageChangePagesPrinted = calculatePercentageChange(currentTotalPagesPrinted, previousTotalPagesPrinted);
 
-    
     const ordersChartData = currentOrders.map(order => ({
-      date: order.createdAt, 
-      orders: 1 
+      date: order.createdAt,
+      orders: 1
     }));
 
-    
     const earningsChartData = currentOrders.map(order => ({
-      date: order.createdAt, 
+      date: order.createdAt,
       earnings: order.totalPrice
     }));
 
