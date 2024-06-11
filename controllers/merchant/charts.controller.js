@@ -14,44 +14,44 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     const timeRange = req.params.timeRange;
     let start, end, prevStart, prevEnd;
 
-    const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+    const IST_OFFSET = '+05:30';
 
     switch (timeRange) {
       case 'today':
-        start = moment().startOf('day').utcOffset('+05:30');
-        end = moment().endOf('day').utcOffset('+05:30');
-        prevStart = moment().subtract(1, 'day').startOf('day').utcOffset('+05:30');
-        prevEnd = moment().subtract(1, 'day').endOf('day').utcOffset('+05:30');
+        start = moment().utcOffset(IST_OFFSET).startOf('day');
+        end = moment().utcOffset(IST_OFFSET).endOf('day');
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(1, 'day').startOf('day');
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(1, 'day').endOf('day');
         break;
       case 'yesterday':
-        start = moment().subtract(1, 'day').startOf('day').utcOffset('+05:30');
-        end = moment().subtract(1, 'day').endOf('day').utcOffset('+05:30');
-        prevStart = moment().subtract(2, 'day').startOf('day').utcOffset('+05:30');
-        prevEnd = moment().subtract(2, 'day').endOf('day').utcOffset('+05:30');
+        start = moment().utcOffset(IST_OFFSET).subtract(1, 'day').startOf('day');
+        end = moment().utcOffset(IST_OFFSET).subtract(1, 'day').endOf('day');
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(2, 'day').startOf('day');
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(2, 'day').endOf('day');
         break;
       case 'thisweek':
-        start = moment().startOf('week').utcOffset('+05:30');
-        end = moment().utcOffset('+05:30');
-        prevStart = moment().subtract(1, 'week').startOf('week').utcOffset('+05:30');
-        prevEnd = moment().subtract(1, 'week').endOf('week').utcOffset('+05:30');
+        start = moment().utcOffset(IST_OFFSET).startOf('week');
+        end = moment().utcOffset(IST_OFFSET);
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(1, 'week').startOf('week');
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(1, 'week').endOf('week');
         break;
       case 'thismonth':
-        start = moment().startOf('month').utcOffset('+05:30');
-        end = moment().utcOffset('+05:30');
-        prevStart = moment().subtract(1, 'month').startOf('month').utcOffset('+05:30');
-        prevEnd = moment().subtract(1, 'month').endOf('month').utcOffset('+05:30');
+        start = moment().utcOffset(IST_OFFSET).startOf('month');
+        end = moment().utcOffset(IST_OFFSET);
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(1, 'month').startOf('month');
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(1, 'month').endOf('month');
         break;
       case 'thisyear':
-        start = moment().startOf('year').utcOffset('+05:30');
-        end = moment().utcOffset('+05:30');
-        prevStart = moment().subtract(1, 'year').startOf('year').utcOffset('+05:30');
-        prevEnd = moment().subtract(1, 'year').endOf('year').utcOffset('+05:30');
+        start = moment().utcOffset(IST_OFFSET).startOf('year');
+        end = moment().utcOffset(IST_OFFSET);
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(1, 'year').startOf('year');
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(1, 'year').endOf('year');
         break;
       case 'custom':
-        start = moment(req.query.start).utcOffset('+05:30');
-        end = moment(req.query.end).utcOffset('+05:30');
-        prevStart = moment(req.query.prevStart).utcOffset('+05:30');
-        prevEnd = moment(req.query.prevEnd).utcOffset('+05:30');
+        start = moment(req.query.start).utcOffset(IST_OFFSET);
+        end = moment(req.query.end).utcOffset(IST_OFFSET);
+        prevStart = moment(req.query.prevStart).utcOffset(IST_OFFSET);
+        prevEnd = moment(req.query.prevEnd).utcOffset(IST_OFFSET);
         break;
       default:
         throw new Error('Invalid time range');
@@ -62,6 +62,15 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     const endUTC = end.utc();
     const prevStartUTC = prevStart.utc();
     const prevEndUTC = prevEnd.utc();
+
+    // Logging to check values
+    console.log('Time Range:', timeRange);
+    console.log('Start (IST):', start.format());
+    console.log('End (IST):', end.format());
+    console.log('Start (UTC):', startUTC.format());
+    console.log('End (UTC):', endUTC.format());
+    console.log('Previous Start (UTC):', prevStartUTC.format());
+    console.log('Previous End (UTC):', prevEndUTC.format());
 
     // Fetch orders for the current period
     const currentOrders = await Order.find({
