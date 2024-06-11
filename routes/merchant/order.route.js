@@ -10,6 +10,7 @@ export const merchantOrderRouter = Router();
 // Endpoint to check and get merchant active orders after its opening
 merchantOrderRouter.get(
   "/:storeId",
+  verifyMerchant,
   getXeroxStoreOrdersById
 );
 // Endpoint to check user order viewed status

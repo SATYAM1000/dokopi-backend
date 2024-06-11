@@ -6,7 +6,7 @@ import { XeroxStore } from "../../models/store.model.js";
 export const getXeroxStoreOrdersById = async (req, res) => {
   try {
     const storeId = req.params.storeId;
-    const { date } = req.query; 
+    const { date } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
@@ -27,6 +27,7 @@ export const getXeroxStoreOrdersById = async (req, res) => {
       storeId: storeId,
       paymentStatus: "success",
     };
+
     if (date) {
       const selectedDate = new Date(date);
       if (isNaN(selectedDate.getTime())) {
@@ -36,14 +37,22 @@ export const getXeroxStoreOrdersById = async (req, res) => {
         });
       }
 
-      const startOfDay = new Date(date);
-      startOfDay.setUTCHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setUTCHours(23, 59, 59, 999);
+      // Convert the selected date to IST and set the start and end of the day in IST
+      const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+
+      const startOfDayIST = new Date(selectedDate.getTime() + IST_OFFSET);
+      startOfDayIST.setUTCHours(0, 0, 0, 0);
+
+      const endOfDayIST = new Date(selectedDate.getTime() + IST_OFFSET);
+      endOfDayIST.setUTCHours(23, 59, 59, 999);
+
+      // Convert the start and end of the day back to UTC
+      const startOfDayUTC = new Date(startOfDayIST.getTime() - IST_OFFSET);
+      const endOfDayUTC = new Date(endOfDayIST.getTime() - IST_OFFSET);
 
       query.createdAt = {
-        $gte: startOfDay,
-        $lt: endOfDay,
+        $gte: startOfDayUTC,
+        $lt: endOfDayUTC,
       };
     } else {
       query.createdAt = {
@@ -70,7 +79,7 @@ export const getXeroxStoreOrdersById = async (req, res) => {
       data: orders,
     });
   } catch (error) {
-    logger.error(`Error while fetching orders: ${error.message}`);
+    console.error(`Error while fetching orders: ${error.message}`);
     return res.status(500).json({
       msg: "Something went wrong!",
       error: error.message,
