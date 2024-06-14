@@ -22,7 +22,6 @@ export const pageCounter = async (filePath, extension) => {
           pageCount = await OdtCounter.count(fileBuffer);
           break;
         default:
-          // Handle unsupported file extensions
           pageCount = null;
       }
 
