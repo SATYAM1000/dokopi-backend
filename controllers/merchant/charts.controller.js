@@ -101,6 +101,7 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     // Fetch orders for the current period
     const currentOrders = await Order.find({
       storeId: storeId,
+      paymentStatus: "success",
       createdAt: { $gte: startUTC.toDate(), $lte: endUTC.toDate() },
     });
 

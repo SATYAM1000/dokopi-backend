@@ -30,7 +30,7 @@ export const uploadFileToS3 = async (req, res) => {
       });
     }
     const extension = req.file.originalname.split(".").pop();
-    const pageCount = await pageCounter(req.file.path, extension);
+    const pageCount = await pageCounter(filePath, extension);
     if (!pageCount) {
       if (filePath && fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
