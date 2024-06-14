@@ -7,6 +7,19 @@ const calculatePercentageChange = (current, previous) => {
   return ((current - previous) / previous) * 100;
 };
 
+// Function to generate a range of dates
+const generateDateRange = (start, end) => {
+  let dateArray = [];
+  let currentDate = moment(start);
+
+  while (currentDate <= end) {
+    dateArray.push(currentDate.clone());
+    currentDate.add(1, 'day');
+  }
+
+  return dateArray;
+};
+
 // Controller function to get analytics data for a specific time range and store
 export const getAnalyticsDataForTimeRange = async (req, res) => {
   try {
@@ -63,14 +76,6 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     const prevStartUTC = prevStart.utc();
     const prevEndUTC = prevEnd.utc();
 
-    // Logging to check values
-    console.log('Time Range:', timeRange);
-    console.log('Start (IST):', start.format());
-    console.log('End (IST):', end.format());
-    console.log('Start (UTC):', startUTC.format());
-    console.log('End (UTC):', endUTC.format());
-    console.log('Previous Start (UTC):', prevStartUTC.format());
-    console.log('Previous End (UTC):', prevEndUTC.format());
 
     // Fetch orders for the current period
     const currentOrders = await Order.find({
@@ -107,15 +112,26 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     const percentageChangeOrders = calculatePercentageChange(currentTotalOrders, previousTotalOrders);
     const percentageChangePagesPrinted = calculatePercentageChange(currentTotalPagesPrinted, previousTotalPagesPrinted);
 
-    const ordersChartData = currentOrders.map(order => ({
-      date: order.createdAt,
-      orders: 1
-    }));
+    // Generate date range for the selected period
+    const dateRange = generateDateRange(start, end);
 
-    const earningsChartData = currentOrders.map(order => ({
-      date: order.createdAt,
-      earnings: order.totalPrice
-    }));
+    const ordersChartData = dateRange.map(date => {
+      const dayOrders = currentOrders.filter(order => moment(order.createdAt).isSame(date, 'day'));
+      return {
+        date: date.format(),
+        orders: dayOrders.length
+      };
+    });
+
+    const earningsChartData = dateRange.map(date => {
+      const dayEarnings = currentOrders
+        .filter(order => moment(order.createdAt).isSame(date, 'day'))
+        .reduce((acc, order) => acc + order.totalPrice, 0);
+      return {
+        date: date.format(),
+        earnings: dayEarnings
+      };
+    });
 
     res.json({
       totalOrders: currentTotalOrders,
