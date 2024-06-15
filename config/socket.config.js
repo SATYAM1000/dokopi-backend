@@ -26,29 +26,18 @@ export const socketHandlers = (io, logger) => {
       }
     });
 
-    socket.on("storeOwnerLogin", async (storeId) => {
-      try {
-        const storeSocket = await XeroxStore.findOneAndUpdate(
-          {
-            _id: storeId,
-          },
-          {
-            socketId: socket.id,
-          },
-          {
-            upsert: true,
-            new: true,
-          }
-        );
-        logger.info(`Store owner with ID ${storeId} logged in`);
-      } catch (error) {
-        logger.error("Error storing socket ID:", error);
-      }
-    });
 
-    socket.on("storeOwnerDisconnect", () => {
-      logger.info("Store owner disconnected!");
-    });
+    socket.on("disconnect", async() => {
+      logger.info("Client disconnected!", socket.id);
+      await User.findOneAndUpdate(
+        {
+          socketId: socket.id,
+        },
+        {
+          socketId: "",
+        }
+      )
+    })
   });
 };
 
