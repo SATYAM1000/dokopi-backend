@@ -165,20 +165,10 @@ export const checkout = async (req, res) => {
   }
 };
 
-
-export const checkPaymentStatus = async (
-  req,
-  res,
-  io,
-  logger,
-  merchantId,
-  saltKey,
-  keyIndex
-) => {
+export const checkPaymentStatus = async (req, res) => {
   try {
     const { id } = req.query;
     const merchantTransactionId = id;
-
     if (!merchantTransactionId) {
       return res.status(400).json({
         success: false,
@@ -207,48 +197,53 @@ export const checkPaymentStatus = async (
       },
     };
 
-    const response = await axios.request(options);
+    axios
+      .request(options)
+      .then(async (response) => {
+        if (response.data.success === true) {
+          const order = await Order.findOneAndUpdate(
+            { phonePeTransactionId: merchantTransactionId },
+            { paymentStatus: "success" },
+            { new: true }
+          );
 
-    if (response.data.success === true) {
-      const order = await Order.findOneAndUpdate(
-        { phonePeTransactionId: merchantTransactionId },
-        { paymentStatus: "success" },
-        { new: true }
-      );
+          // io.emit("paymentSuccess", { storeId: order.storeId });
+          const currentStore = await XeroxStore.findById(order.storeId);
+          const merchant = await User.findById(currentStore.storeOwner);
 
-      const currentStore = await XeroxStore.findById(order.storeId);
-      const merchant = await User.findById(currentStore.storeOwner);
-
-      if (merchant && merchant.socketId) {
-        io.to(merchant.socketId).emit("paymentSuccess", {
-          order: order._id,
-          message: "You have a new order!",
+          if (merchant && merchant.socketId) {
+            io.to(merchant.socketId).emit("paymentSuccess", {
+              storeId: order.storeId,
+            });
+          }
+          const url =
+            process.env.NODE_ENV === "production"
+              ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
+              : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
+          return res.redirect(url);
+        } else {
+          const order = await Order.findOneAndUpdate(
+            { phonePeTransactionId: merchantTransactionId },
+            { paymentStatus: "failed" },
+            { new: true }
+          );
+          const url =
+            process.env.NODE_ENV === "production"
+              ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
+              : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
+          return res.redirect(url);
+        }
+      })
+      .catch((error) => {
+        logger.error("Error while checking phonepe payment status: ", error);
+        res.status(500).json({
+          success: false,
+          msg: error.message,
         });
-      }
-
-      const url =
-        process.env.NODE_ENV === "production"
-          ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
-          : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
-
-      return res.redirect(url);
-    } else {
-      await Order.findOneAndUpdate(
-        { phonePeTransactionId: merchantTransactionId },
-        { paymentStatus: "failed" },
-        { new: true }
-      );
-
-      const url =
-        process.env.NODE_ENV === "production"
-          ? `https://dokopi.com/payment/failed?id=${merchantTransactionId}`
-          : `http://localhost:3000/payment/failed?id=${merchantTransactionId}`;
-
-      return res.redirect(url);
-    }
+      });
   } catch (error) {
-    logger.error("Error while checking PhonePe payment status:", error);
-    return res.status(500).json({
+    logger.error("Error while checking phonepe payment status: ", error);
+    res.status(500).json({
       success: false,
       msg: error.message,
     });
