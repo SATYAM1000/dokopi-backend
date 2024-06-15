@@ -35,11 +35,8 @@
     "nodemon": "^3.1.0",
     "page-count": "^0.0.4",
     "pdfkit": "^0.15.0",
-    "razorpay": "^2.9.4",
     "socket.io": "^4.7.5",
-    "unzipper": "^0.12.1",
     "uuid": "^9.0.1",
-    "winston": "^3.13.0",
-    "xml2js": "^0.6.2"
+    "winston": "^3.13.0"
   }
 }
