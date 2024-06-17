@@ -27,7 +27,7 @@ const domain =
     : "http://localhost:4000";
 
 export const checkout = async (req, res) => {
-  const { name, amount, cartItems, merchantTransactionId, merchantUserId } =
+  const { name, amount, cartItems, merchantTransactionId, merchantUserId, platformFee } =
     req.body;
   const { userId, storeId } = req.query;
 
@@ -86,7 +86,7 @@ export const checkout = async (req, res) => {
 
     const orderNumber = await getNextSequenceValue("orderID");
 
-    const formattedOrderNumber = `#order_${orderNumber
+    const formattedOrderNumber = `#Order_${orderNumber
       .toString()
       .padStart(6, "0")}`;
 
@@ -95,6 +95,7 @@ export const checkout = async (req, res) => {
       storeId,
       cartItems: decryptedCartItems,
       totalPrice: amount,
+      platformFee,
       orderStatus: "pending",
       paymentStatus: "pending",
       phonePeTransactionId: merchantTransactionId,

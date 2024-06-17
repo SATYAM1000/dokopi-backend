@@ -3,7 +3,7 @@ import { Order } from "../../models/order.model.js";
 
 // Function to calculate percentage change
 const calculatePercentageChange = (current, previous) => {
-  if (previous === 0) return current > 0 ? 100 : 0; // If previous is 0 and current is positive, it's 100% increase
+  if (previous === 0) return current > 0 ? 100 : 0;
   return ((current - previous) / previous) * 100;
 };
 
@@ -20,65 +20,32 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
       case "today":
         start = moment().utcOffset(IST_OFFSET).startOf("day");
         end = moment().utcOffset(IST_OFFSET).endOf("day");
-        prevStart = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "day")
-          .startOf("day");
-        prevEnd = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "day")
-          .endOf("day");
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(1, "day").startOf("day");
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(1, "day").endOf("day");
         break;
       case "yesterday":
-        start = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "day")
-          .startOf("day");
+        start = moment().utcOffset(IST_OFFSET).subtract(1, "day").startOf("day");
         end = moment().utcOffset(IST_OFFSET).subtract(1, "day").endOf("day");
-        prevStart = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(2, "day")
-          .startOf("day");
-        prevEnd = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(2, "day")
-          .endOf("day");
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(2, "day").startOf("day");
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(2, "day").endOf("day");
         break;
       case "thisweek":
         start = moment().utcOffset(IST_OFFSET).startOf("week");
         end = moment().utcOffset(IST_OFFSET);
-        prevStart = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "week")
-          .startOf("week");
-        prevEnd = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "week")
-          .endOf("week");
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(1, "week").startOf("week");
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(1, "week").endOf("week");
         break;
       case "thismonth":
         start = moment().utcOffset(IST_OFFSET).startOf("month");
         end = moment().utcOffset(IST_OFFSET);
-        prevStart = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "month")
-          .startOf("month");
-        prevEnd = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "month")
-          .endOf("month");
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(1, "month").startOf("month");
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(1, "month").endOf("month");
         break;
       case "thisyear":
         start = moment().utcOffset(IST_OFFSET).startOf("year");
         end = moment().utcOffset(IST_OFFSET);
-        prevStart = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "year")
-          .startOf("year");
-        prevEnd = moment()
-          .utcOffset(IST_OFFSET)
-          .subtract(1, "year")
-          .endOf("year");
+        prevStart = moment().utcOffset(IST_OFFSET).subtract(1, "year").startOf("year");
+        prevEnd = moment().utcOffset(IST_OFFSET).subtract(1, "year").endOf("year");
         break;
       case "custom":
         start = moment(req.query.start).utcOffset(IST_OFFSET);
@@ -96,8 +63,6 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     const prevStartUTC = prevStart.utc();
     const prevEndUTC = prevEnd.utc();
 
-  
-
     // Fetch orders for the current period
     const currentOrders = await Order.find({
       storeId: storeId,
@@ -112,10 +77,10 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     });
 
     // Calculate total orders, earnings, and pages printed for the current period
-    const currentTotalEarnings = currentOrders.reduce(
-      (acc, order) => acc + order.totalPrice,
-      0
-    );
+    const currentTotalEarnings = currentOrders.reduce((acc, order) => {
+      const earningsAfterPlatformFee = order.totalPrice - order.platformFee;
+      return acc + earningsAfterPlatformFee;
+    }, 0);
     const currentTotalOrders = currentOrders.length;
     const currentTotalPagesPrinted = currentOrders.reduce((acc, order) => {
       return (
@@ -127,10 +92,10 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     }, 0);
 
     // Calculate total orders, earnings, and pages printed for the previous period
-    const previousTotalEarnings = previousOrders.reduce(
-      (acc, order) => acc + order.totalPrice,
-      0
-    );
+    const previousTotalEarnings = previousOrders.reduce((acc, order) => {
+      const earningsAfterPlatformFee = order.totalPrice - order.platformFee;
+      return acc + earningsAfterPlatformFee;
+    }, 0);
     const previousTotalOrders = previousOrders.length;
     const previousTotalPagesPrinted = previousOrders.reduce((acc, order) => {
       return (
@@ -155,14 +120,15 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
       previousTotalPagesPrinted
     );
 
+    // Prepare data for charts
     const ordersChartData = currentOrders.map((order) => ({
       date: order.createdAt,
-      orders: 1,
+      orders: 1, // Assuming 1 order per entry for simplicity
     }));
 
     const earningsChartData = currentOrders.map((order) => ({
       date: order.createdAt,
-      earnings: order.totalPrice,
+      earnings: order.totalPrice - order.platformFee,
     }));
 
     res.json({
