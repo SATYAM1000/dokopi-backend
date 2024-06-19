@@ -31,7 +31,7 @@ export const verifyUser = async (req, res, next) => {
         success: false,
       });
     }
-    if (user.role !== "USER") {
+    if (user.role !== "USER" && user.role !== "MERCHANT" && user.role !== "ADMIN") {
       return res.status(401).json({
         msg: "Invalid bearer token",
         success: false,
