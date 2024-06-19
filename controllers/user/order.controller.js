@@ -4,11 +4,22 @@ import mongoose from "mongoose";
 export const checkUserActiveOrders = async (req, res) => {
   try {
     const userId = req.user.id;
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
     const activeOrders = await Order.find({
       userId: userId,
       isActive: true,
       paymentStatus: "success",
-    });
+    })
+      .select("-__v -userId -storeId -phonePeMerchantUserId")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
     if (!activeOrders || !activeOrders.length) {
       return res.status(404).json({
         msg: "No active orders found!",
@@ -16,10 +27,17 @@ export const checkUserActiveOrders = async (req, res) => {
       });
     }
 
+
+    const totalOrders = await Order.countDocuments({ userId: userId, isActive: true, paymentStatus: "success" });
+    const totalPages = Math.ceil(totalOrders / limit);
+
     return res.status(200).json({
-      msg: "Active orders fetched successfully!",
+      msg: "Orders history fetched successfully!",
       success: true,
       data: activeOrders,
+      currentPage: page,
+      totalPages: totalPages,
+      totalOrders: totalOrders,
     });
   } catch (error) {
     logger.error(`Error while checking user active orders: ${error.message}`);
