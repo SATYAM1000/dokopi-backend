@@ -263,7 +263,7 @@ export const searchStores = async (req, res) => {
 
     if (storePhoneNumber) {
       searchCriteria.push({
-        "storeDetails.storePhoneNumber": storePhoneNumber,
+        "storeDetails.storePhoneNumber": { $regex: new RegExp(`^${storePhoneNumber}`, "i") },
       });
     }
 
