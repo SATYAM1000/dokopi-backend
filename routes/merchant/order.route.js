@@ -1,5 +1,6 @@
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
 import {
+  getTotalOrderDetails,
   getXeroxStoreOrdersById,
   isOrderViewed,
 } from "../../controllers/merchant/order.controller.js";
@@ -15,3 +16,14 @@ merchantOrderRouter.get(
 );
 // Endpoint to check user order viewed status
 merchantOrderRouter.put("/is-viewed/:orderId", verifyMerchant, isOrderViewed);
+
+// Endpoint to get the data for dashboard routes(to get the total orders details till registerd)
+merchantOrderRouter.get("/dashboard/:storeId", verifyMerchant, getTotalOrderDetails);
+
+
+
+
+
+
+
+
