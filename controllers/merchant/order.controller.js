@@ -1,7 +1,7 @@
 import { logger } from "../../config/logger.config.js";
-import { Order } from "../../models/order.model.js";
 import mongoose from "mongoose";
 import { XeroxStore } from "../../models/store.model.js";
+import { Order } from "../../models/order.model.js";
 
 export const getXeroxStoreOrdersById = async (req, res) => {
   try {
@@ -137,7 +137,7 @@ export const changeOrderStatus = async (req, res) => {
   try {
     const orderId = req.params.orderId;
     const status = req.params.status;
-    
+
     if (!orderId) {
       return res.status(400).json({
         msg: "Order ID is required",
@@ -187,6 +187,92 @@ export const changeOrderStatus = async (req, res) => {
     logger.error(`Error while changing order status: ${error.message}`);
     return res.status(500).json({
       msg: "Something went wrong",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const getTotalOrderDetails = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store ID!",
+        success: false,
+      });
+    }
+    const data = await Order.aggregate([
+      {
+        $match: {
+          storeId: new mongoose.Types.ObjectId("665d78f3aa4504eb4abeb726"),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "action",
+        },
+      },
+      {
+        $unwind: "$action",
+      },
+      {
+        $addFields: {
+          TransactionId: "$phonePeTransactionId",
+          amount: "$totalPrice",
+          FilesRecvd: {
+            $cond: {
+              if: {
+                $isArray: "$cartItems",
+              },
+              then: {
+                $size: "$cartItems",
+              },
+              else: "0",
+            },
+          },
+          Status: "$orderStatus",
+          Transaction_Time: "$createdAt",
+          Order_Id: "$orderNumber",
+          ViewDetail: "$cartItems",
+        },
+      },
+      {
+        $project: {
+          phonePeTransactionId: 0,
+          phonePeMerchantUserId: 0,
+          totalPrice: 0,
+          cartItems: 0,
+          storeId: 0,
+          orderNumber: 0,
+          orderStatus: 0,
+          userId: 0,
+          isActive: 0,
+          __v: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          "action.createdAt": 0,
+          "action.updatedAt": 0,
+          "action.socketId": 0,
+          "action.__v": 0,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      msg: "Orders fetched successfully",
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error(
+      `Error while fetching dashboard Total Orders: ${error.message}`
+    );
+    return res.status(500).json({
+      msg: "Something went wrong!",
       error: error.message,
       success: false,
     });
