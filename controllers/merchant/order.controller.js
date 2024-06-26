@@ -132,3 +132,63 @@ export const isOrderViewed = async (req, res) => {
     });
   }
 };
+
+export const changeOrderStatus = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const status = req.params.status;
+    
+    if (!orderId) {
+      return res.status(400).json({
+        msg: "Order ID is required",
+        success: false,
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        msg: "Invalid order ID",
+        success: false,
+      });
+    }
+
+    if (
+      !status ||
+      ![
+        "pending",
+        "processing",
+        "rejected",
+        "delivered",
+        "cancelled",
+        "completed",
+      ].includes(status)
+    ) {
+      return res.status(400).json({
+        msg: "Status is required",
+        success: false,
+      });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        msg: "Order not found",
+        success: false,
+      });
+    }
+
+    order.orderStatus = status;
+    await order.save();
+    return res.status(200).json({
+      msg: "Order status changed successfully",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while changing order status: ${error.message}`);
+    return res.status(500).json({
+      msg: "Something went wrong",
+      error: error.message,
+      success: false,
+    });
+  }
+};
