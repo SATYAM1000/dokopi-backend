@@ -1,12 +1,15 @@
 import {
   changeStoreStatus,
   createNewXeroxStore,
+  fetchXeroxStoreImages,
   getStoreBasicDetails,
   getStorePricing,
   updateStoreBasicDetails,
+  uploadXeroxStoreImages,
 } from "../../controllers/merchant/store.controller.js";
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
 import { Router } from "express";
+import upload from "../../middlewares/multer.middleware.js";
 
 const merchantStoreRouter = Router();
 
@@ -32,5 +35,11 @@ merchantStoreRouter.get("/basic-details/:storeId", verifyMerchant,getStoreBasicD
 
 //Endpoint to update store basic details
 merchantStoreRouter.put("/basic-details/:storeId", verifyMerchant,updateStoreBasicDetails);
+
+//Endpoint to store xerox shop images
+merchantStoreRouter.post("/store-images/:storeId", verifyMerchant, upload.single("file"), uploadXeroxStoreImages);
+
+//Endpoint to fetch xerox store images
+merchantStoreRouter.get("/store-images/:storeId", verifyMerchant, fetchXeroxStoreImages);
 
 export default merchantStoreRouter;

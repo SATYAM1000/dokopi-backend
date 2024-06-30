@@ -69,12 +69,10 @@ const xeroxStoreSchema = new mongoose.Schema(
     pricing: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Pricing",
-      required: true,
     },
     bankDetails: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "BankDetails",
-      required: true,
     },
     storeOwner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     storeReviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" }],

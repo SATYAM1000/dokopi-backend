@@ -2,6 +2,8 @@ import { XeroxStore } from "../../models/store.model.js";
 import { logger } from "../../config/logger.config.js";
 import { validateFields } from "../../utils/validate-fields.js";
 import mongoose from "mongoose";
+import { uploadXeroxStoreImagesToS3 } from "../../utils/store-images-upload.js";
+import fs from "fs";
 
 export const createNewXeroxStore = async (req, res) => {
   try {
@@ -279,8 +281,6 @@ export const getStoreBasicDetails = async (req, res) => {
   }
 };
 
-
-
 export const updateStoreBasicDetails = async (req, res) => {
   try {
     const storeId = req.params.storeId;
@@ -348,6 +348,124 @@ export const updateStoreBasicDetails = async (req, res) => {
     });
   } catch (error) {
     console.error(`Error while updating store basic details: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const uploadXeroxStoreImages = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    const filePath = req.file?.path;
+
+    if (req.fileValidationError) {
+      if (filePath && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      logger.error("File validation error");
+      return res.status(400).json({
+        msg: req.fileValidationError,
+        success: false,
+      });
+    }
+
+    if (!req.file) {
+      logger.error("File not found!");
+      return res.status(400).json({
+        msg: "File not found!",
+        success: false,
+      });
+    }
+
+    const extension = req.file.originalname.split(".").pop();
+
+    if (!["jpg", "jpeg", "png"].includes(extension)) {
+      if (filePath && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      logger.error("Invalid file type. Only JPG, JPEG, PNG allowed.");
+      return res.status(400).json({
+        msg: "Invalid file type. Only JPG, JPEG, PNG allowed.",
+        success: false,
+      });
+    }
+
+    const fileURL = await uploadXeroxStoreImagesToS3(filePath);
+
+    store.storeImagesURL.push(fileURL);
+    await store.save();
+
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    return res.status(200).json({
+      msg: "Store images uploaded successfully!",
+      success: true,
+      data: fileURL,
+    });
+  } catch (error) {
+    logger.error(`Error while uploading store images: ${error.message}`);
+
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const fetchXeroxStoreImages = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      msg: "Store images fetched successfully!",
+      success: true,
+      data: store.storeImagesURL,
+    });
+  } catch (error) {
+    logger.error(`Error while fetching store images: ${error.message}`);
     return res.status(500).json({
       msg: "Internal server error!",
       error: error.message,
