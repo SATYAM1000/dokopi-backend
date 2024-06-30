@@ -1,7 +1,14 @@
 import mongoose from "mongoose";
+
 const xeroxStoreSchema = new mongoose.Schema(
   {
     storeDetails: {
+      storeRefrenceId: {
+        type: String,
+        unique: [true, "Store reference ID already exists"],
+        required: true,
+        trim: true,
+      },
       storeName: {
         type: String,
         required: true,
@@ -26,7 +33,6 @@ const xeroxStoreSchema = new mongoose.Schema(
         storeState: { type: String, trim: true },
         storeCountry: { type: String, trim: true },
       },
-
       storeLogoURL: { type: String, trim: true },
       storeOpeningHours: {
         Monday: { type: String, trim: true },
@@ -60,19 +66,18 @@ const xeroxStoreSchema = new mongoose.Schema(
           "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQ4HtE_O8tvs-TlF27vWMWHjxoCQ7HmFmZHBkZpKt1n4PFIN-aN&usqp=CAU",
       },
     ],
-    storePrices: {
-      binding: { type: Number },
-      lamination: { type: Number },
-      taping: { type: Number },
-      simplexBlackAndWhite: { type: Number },
-      simplexColor: { type: Number },
-      duplexBlackAndWhite: { type: Number },
-      duplexColor: { type: Number },
+    pricing: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Pricing",
+      required: true,
+    },
+    bankDetails: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BankDetails",
+      required: true,
     },
     storeOwner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    storeReviews: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" },
-    ],
+    storeReviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" }],
     storeWalletBalance: {
       type: Number,
       default: 0,
@@ -81,8 +86,8 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     storeCoupons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Coupon" }],
     isStoreOpen: { type: Boolean, default: true },
-    storeOpenedAt: { type: Date, default: Date.now() },
-    storeCreatedDate: { type: Date, default: Date.now() },
+    storeOpenedAt: { type: Date, default: Date.now },
+    storeCreatedDate: { type: Date, default: Date.now },
     socketId: {
       type: String,
       trim: true,

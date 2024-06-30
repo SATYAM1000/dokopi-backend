@@ -85,7 +85,6 @@ export const createNewXeroxStore = async (req, res) => {
   }
 };
 
-
 export const changeStoreStatus = async (req, res) => {
   try {
     const storeId = req.params.storeId;
@@ -215,6 +214,140 @@ export const getStorePricing = async (req, res) => {
     });
   } catch (error) {
     logger.error(`Error while getting store pricing: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const getStoreBasicDetails = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId).select([
+      "storeDetails.storeRefrenceId",
+      "storeDetails.storeName",
+      "storeDetails.storePhoneNumber",
+      "storeDetails.storeEmail",
+      "storeDetails.storeLocation.storeLandmark",
+      "storeDetails.storeLocation.storeZipCode",
+      "storeDetails.storeLocation.storeCity",
+      "storeDetails.storeLocation.storeState",
+      "storeLocationCoordinates.coordinates",
+    ]);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    const responseData = {
+      storeRefrenceId: store.storeDetails.storeRefrenceId,
+      storeName: store.storeDetails.storeName,
+      storePhoneNumber: store.storeDetails.storePhoneNumber,
+      storeEmail: store.storeDetails.storeEmail,
+      storeLandmark: store.storeDetails.storeLocation.storeLandmark,
+      storeZipCode: store.storeDetails.storeLocation.storeZipCode,
+      storeCity: store.storeDetails.storeLocation.storeCity,
+      storeState: store.storeDetails.storeLocation.storeState,
+      storeLatitude: store.storeLocationCoordinates.coordinates[1], // Latitude
+      storeLongitude: store.storeLocationCoordinates.coordinates[0], // Longitude
+    };
+
+    return res.status(200).json({
+      msg: "Store basic details fetched successfully!",
+      success: true,
+      data: responseData,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store basic details: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+
+
+export const updateStoreBasicDetails = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const {
+      storeRefrenceId,
+      storeName,
+      storePhoneNumber,
+      storeEmail,
+      storeLocation: {
+        storeLandmark,
+        storeZipCode,
+        storeCity,
+        storeState,
+        storeLatitude,
+        storeLongitude,
+      },
+    } = req.body;
+
+    let updateObject = {};
+    if (storeRefrenceId)
+      updateObject["storeDetails.storeRefrenceId"] = storeRefrenceId;
+    if (storeName) updateObject["storeDetails.storeName"] = storeName;
+    if (storePhoneNumber)
+      updateObject["storeDetails.storePhoneNumber"] = storePhoneNumber;
+    if (storeEmail) updateObject["storeDetails.storeEmail"] = storeEmail;
+    if (storeLandmark)
+      updateObject["storeDetails.storeLocation.storeLandmark"] = storeLandmark;
+    if (storeZipCode)
+      updateObject["storeDetails.storeLocation.storeZipCode"] = storeZipCode;
+    if (storeCity)
+      updateObject["storeDetails.storeLocation.storeCity"] = storeCity;
+    if (storeState)
+      updateObject["storeDetails.storeLocation.storeState"] = storeState;
+    if (storeLongitude && storeLatitude) {
+      updateObject["storeLocationCoordinates.coordinates"] = [
+        storeLongitude,
+        storeLatitude,
+      ];
+    }
+
+    const updatedStore = await XeroxStore.findByIdAndUpdate(
+      storeId,
+      updateObject,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedStore) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      msg: "Store basic details updated successfully!",
+      success: true,
+      data: updatedStore,
+    });
+  } catch (error) {
+    console.error(`Error while updating store basic details: ${error.message}`);
     return res.status(500).json({
       msg: "Internal server error!",
       error: error.message,

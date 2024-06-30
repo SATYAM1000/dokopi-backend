@@ -55,6 +55,7 @@ connectDB(process.env.DATABASE_URL)
     process.exit(1);
   });
 
+  
 app.get("/api/test", (req, res) => {
   res.send("Hello, World!");
 });

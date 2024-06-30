@@ -1,7 +1,9 @@
 import {
   changeStoreStatus,
   createNewXeroxStore,
+  getStoreBasicDetails,
   getStorePricing,
+  updateStoreBasicDetails,
 } from "../../controllers/merchant/store.controller.js";
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
 import { Router } from "express";
@@ -24,5 +26,11 @@ merchantStoreRouter.put(
   verifyMerchant,
   changeStoreStatus
 );
+
+//Endpoint to get basic store details
+merchantStoreRouter.get("/basic-details/:storeId", verifyMerchant,getStoreBasicDetails);
+
+//Endpoint to update store basic details
+merchantStoreRouter.put("/basic-details/:storeId", verifyMerchant,updateStoreBasicDetails);
 
 export default merchantStoreRouter;
