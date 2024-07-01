@@ -4,6 +4,7 @@ import { validateFields } from "../../utils/validate-fields.js";
 import mongoose from "mongoose";
 import { uploadXeroxStoreImagesToS3 } from "../../utils/store-images-upload.js";
 import fs from "fs";
+import newPricingModel from "../../models/new.pricing.model.js";
 
 export const createNewXeroxStore = async (req, res) => {
   try {
@@ -473,3 +474,37 @@ export const fetchXeroxStoreImages = async (req, res) => {
     });
   }
 };
+
+export const ConfigurStorePrice = async (req, res) => {
+  try {
+    const PriceListRecvdFromUser = req.body.storePriceData;
+    const storeId = PriceListRecvdFromUser.storeId
+    console.log(req.body);
+
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+    //finding docs and updating the values of prices
+    let NewPriceList = await newPricingModel.findOneAndUpdate({ storeId }, PriceListRecvdFromUser)
+
+    // if addingPrice is null,then this is new user addingis prices of store then create new storeprice List then continue
+    if (!NewPriceList) {
+      NewPriceList = await newPricingModel.create(PriceListRecvdFromUser)
+      await NewPriceList.save();
+    }
+
+    return res.status(201).json({
+      msg: "Success",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+}

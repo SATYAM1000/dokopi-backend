@@ -6,6 +6,7 @@ import {
   getStorePricing,
   updateStoreBasicDetails,
   uploadXeroxStoreImages,
+  ConfigurStorePrice
 } from "../../controllers/merchant/store.controller.js";
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
 import { Router } from "express";
@@ -31,15 +32,18 @@ merchantStoreRouter.put(
 );
 
 //Endpoint to get basic store details
-merchantStoreRouter.get("/basic-details/:storeId", verifyMerchant,getStoreBasicDetails);
+merchantStoreRouter.get("/basic-details/:storeId", verifyMerchant, getStoreBasicDetails);
 
 //Endpoint to update store basic details
-merchantStoreRouter.put("/basic-details/:storeId", verifyMerchant,updateStoreBasicDetails);
+merchantStoreRouter.put("/basic-details/:storeId", verifyMerchant, updateStoreBasicDetails);
 
 //Endpoint to store xerox shop images
 merchantStoreRouter.post("/store-images/:storeId", verifyMerchant, upload.single("file"), uploadXeroxStoreImages);
 
 //Endpoint to fetch xerox store images
 merchantStoreRouter.get("/store-images/:storeId", verifyMerchant, fetchXeroxStoreImages);
+
+//Endpoint to update and create Price List for store
+merchantStoreRouter.post("/configure-price", verifyMerchant, ConfigurStorePrice)
 
 export default merchantStoreRouter;
