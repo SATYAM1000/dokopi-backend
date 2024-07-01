@@ -4,6 +4,7 @@ import { validateFields } from "../../utils/validate-fields.js";
 import mongoose from "mongoose";
 import { uploadXeroxStoreImagesToS3 } from "../../utils/store-images-upload.js";
 import fs from "fs";
+import storeHoursModel from "../../models/store-hours.model.js";
 
 export const createNewXeroxStore = async (req, res) => {
   try {
@@ -439,6 +440,57 @@ export const uploadXeroxStoreImages = async (req, res) => {
   }
 };
 
+export const deleteXeroxStoreImages = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const fileURL = req.body.fileURL;
+    if (!fileURL) {
+      return res.status(400).json({
+        msg: "File URL not found!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    const index = store.storeImagesURL.indexOf(fileURL);
+    if (index === -1) {
+      return res.status(404).json({
+        msg: "File not found!",
+        success: false,
+      });
+    }
+
+    store.storeImagesURL.splice(index, 1);
+    await store.save();
+
+    return res.status(200).json({
+      msg: "File deleted successfully!",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while deleting store images: ${error.message}`);
+    return res.status(500).json({
+      msg: error.message,
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
 export const fetchXeroxStoreImages = async (req, res) => {
   try {
     const storeId = req.params.storeId;
@@ -466,6 +518,177 @@ export const fetchXeroxStoreImages = async (req, res) => {
     });
   } catch (error) {
     logger.error(`Error while fetching store images: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const setXeroxStoreOpenCloseHours = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    const timings = req.body;
+    console.log("timings", timings);
+
+    if (!timings) {
+      return res.status(400).json({
+        msg: "Timings not provided!",
+        success: false,
+      });
+    }
+
+    const storeOpeningClosingHours = await storeHoursModel.findOne({
+      storeId,
+    });
+
+    if (storeOpeningClosingHours) {
+      storeOpeningClosingHours.Monday.isOpen = timings.Monday.isOpen;
+      storeOpeningClosingHours.Monday.open = timings.Monday.open;
+      storeOpeningClosingHours.Monday.close = timings.Monday.close;
+
+      storeOpeningClosingHours.Tuesday.isOpen = timings.Tuesday.isOpen;
+      storeOpeningClosingHours.Tuesday.open = timings.Tuesday.open;
+      storeOpeningClosingHours.Tuesday.close = timings.Tuesday.close;
+
+      storeOpeningClosingHours.Wednesday.isOpen = timings.Wednesday.isOpen;
+      storeOpeningClosingHours.Wednesday.open = timings.Wednesday.open;
+      storeOpeningClosingHours.Wednesday.close = timings.Wednesday.close;
+
+      storeOpeningClosingHours.Thursday.isOpen = timings.Thursday.isOpen;
+      storeOpeningClosingHours.Thursday.open = timings.Thursday.open;
+      storeOpeningClosingHours.Thursday.close = timings.Thursday.close;
+
+      storeOpeningClosingHours.Friday.isOpen = timings.Friday.isOpen;
+      storeOpeningClosingHours.Friday.open = timings.Friday.open;
+      storeOpeningClosingHours.Friday.close = timings.Friday.close;
+
+      storeOpeningClosingHours.Saturday.isOpen = timings.Saturday.isOpen;
+      storeOpeningClosingHours.Saturday.open = timings.Saturday.open;
+      storeOpeningClosingHours.Saturday.close = timings.Saturday.close;
+
+      storeOpeningClosingHours.Sunday.isOpen = timings.Sunday.isOpen;
+      storeOpeningClosingHours.Sunday.open = timings.Sunday.open;
+      storeOpeningClosingHours.Sunday.close = timings.Sunday.close;
+
+      await storeOpeningClosingHours.save();
+
+      return res.status(200).json({
+        msg: "Store open/close hours updated successfully!",
+        success: true,
+      });
+    }
+
+    await storeHoursModel.create({
+      storeId,
+      Monday: {
+        open: timings.Monday.open,
+        close: timings.Monday.close,
+        isOpen: timings.Monday.isOpen,
+      },
+      Tuesday: {
+        open: timings.Tuesday.open,
+        close: timings.Tuesday.close,
+        isOpen: timings.Tuesday.isOpen,
+      },
+      Wednesday: {
+        open: timings.Wednesday.open,
+        close: timings.Wednesday.close,
+        isOpen: timings.Wednesday.isOpen,
+      },
+      Thursday: {
+        open: timings.Thursday.open,
+        close: timings.Thursday.close,
+        isOpen: timings.Thursday.isOpen,
+      },
+      Friday: {
+        open: timings.Friday.open,
+        close: timings.Friday.close,
+        isOpen: timings.Friday.isOpen,
+      },
+      Saturday: {
+        open: timings.Saturday.open,
+        close: timings.Saturday.close,
+        isOpen: timings.Saturday.isOpen,
+      },
+      Sunday: {
+        open: timings.Sunday.open,
+        close: timings.Sunday.close,
+        isOpen: timings.Sunday.isOpen,
+      },
+    });
+
+    return res.status(200).json({
+      msg: "Store open/close hours set successfully!",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(
+      `Error while setting store open/close hours: ${error.message}`
+    );
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const getXeroxStoreOpenCloseHours = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    const storeOpeningClosingHours = await storeHoursModel.findOne({
+      storeId,
+    });
+
+    if (!storeOpeningClosingHours) {
+      return res.status(404).json({
+        msg: "Store open/close hours not found!",
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      msg: "Store open/close hours fetched successfully!",
+      success: true,
+      data: storeOpeningClosingHours,
+    });
+  } catch (error) {
+    logger.error(
+      `Error while fetching store open/close hours: ${error.message}`
+    );
     return res.status(500).json({
       msg: "Internal server error!",
       error: error.message,

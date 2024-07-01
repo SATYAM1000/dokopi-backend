@@ -50,6 +50,10 @@ const xeroxStoreSchema = new mongoose.Schema(
       type: { type: String, enum: ["Point"], default: "Point" },
       coordinates: { type: [Number], required: true },
     },
+    storeTiming: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StoreHours",
+    },
     storeStatus: {
       isStoreVerified: { type: Boolean, default: false },
       isStoreBlocked: { type: Boolean, default: false },
@@ -62,8 +66,7 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeImagesURL: [
       {
         type: String,
-        default:
-          "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQ4HtE_O8tvs-TlF27vWMWHjxoCQ7HmFmZHBkZpKt1n4PFIN-aN&usqp=CAU",
+        trim: true,
       },
     ],
     pricing: {
@@ -75,7 +78,9 @@ const xeroxStoreSchema = new mongoose.Schema(
       ref: "BankDetails",
     },
     storeOwner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    storeReviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" }],
+    storeReviews: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" },
+    ],
     storeWalletBalance: {
       type: Number,
       default: 0,

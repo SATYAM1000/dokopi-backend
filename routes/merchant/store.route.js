@@ -4,6 +4,8 @@ import {
   fetchXeroxStoreImages,
   getStoreBasicDetails,
   getStorePricing,
+  getXeroxStoreOpenCloseHours,
+  setXeroxStoreOpenCloseHours,
   updateStoreBasicDetails,
   uploadXeroxStoreImages,
 } from "../../controllers/merchant/store.controller.js";
@@ -41,5 +43,11 @@ merchantStoreRouter.post("/store-images/:storeId", verifyMerchant, upload.single
 
 //Endpoint to fetch xerox store images
 merchantStoreRouter.get("/store-images/:storeId", verifyMerchant, fetchXeroxStoreImages);
+
+//Endpoint to set xerox store opening and closing hours
+merchantStoreRouter.post("/store-opening-closing-hours/:storeId", verifyMerchant, setXeroxStoreOpenCloseHours);
+
+// Endpoint to get xerox store opening and closing hours
+merchantStoreRouter.get("/store-opening-closing-hours/:storeId", verifyMerchant, getXeroxStoreOpenCloseHours);
 
 export default merchantStoreRouter;
