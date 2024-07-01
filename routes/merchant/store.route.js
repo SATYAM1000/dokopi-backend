@@ -8,6 +8,9 @@ import {
   setXeroxStoreOpenCloseHours,
   updateStoreBasicDetails,
   uploadXeroxStoreImages,
+  ConfigurStorePrice,
+  NewPriceList,
+  deleteXeroxStoreImages
 } from "../../controllers/merchant/store.controller.js";
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
 import { Router } from "express";
@@ -33,13 +36,16 @@ merchantStoreRouter.put(
 );
 
 //Endpoint to get basic store details
-merchantStoreRouter.get("/basic-details/:storeId", verifyMerchant,getStoreBasicDetails);
+merchantStoreRouter.get("/basic-details/:storeId", verifyMerchant, getStoreBasicDetails);
 
 //Endpoint to update store basic details
-merchantStoreRouter.put("/basic-details/:storeId", verifyMerchant,updateStoreBasicDetails);
+merchantStoreRouter.put("/basic-details/:storeId", verifyMerchant, updateStoreBasicDetails);
 
 //Endpoint to store xerox shop images
 merchantStoreRouter.post("/store-images/:storeId", verifyMerchant, upload.single("file"), uploadXeroxStoreImages);
+
+//Endpoint to delete xerox store images
+merchantStoreRouter.delete("/store-images/:storeId", verifyMerchant, deleteXeroxStoreImages);
 
 //Endpoint to fetch xerox store images
 merchantStoreRouter.get("/store-images/:storeId", verifyMerchant, fetchXeroxStoreImages);
@@ -49,5 +55,12 @@ merchantStoreRouter.post("/store-opening-closing-hours/:storeId", verifyMerchant
 
 // Endpoint to get xerox store opening and closing hours
 merchantStoreRouter.get("/store-opening-closing-hours/:storeId", verifyMerchant, getXeroxStoreOpenCloseHours);
+
+//Endpoint to update and create Price List for store
+merchantStoreRouter.post("/configure-price", verifyMerchant, ConfigurStorePrice)
+
+//Endpoint to fetch Price List for store
+merchantStoreRouter.get("/new-price-list/:storeId", verifyMerchant, NewPriceList)
+
 
 export default merchantStoreRouter;
