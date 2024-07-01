@@ -508,3 +508,37 @@ export const ConfigurStorePrice = async (req, res) => {
     });
   }
 }
+
+export const NewPriceList = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await newPricingModel.findOne({ storeId });
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      msg: "Store pricing fetched successfully!",
+      success: true,
+      data: store,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store pricing: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
