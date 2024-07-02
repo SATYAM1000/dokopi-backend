@@ -48,4 +48,4 @@ const storeHoursSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("StoreHours", storeHoursSchema);
+export const StoreHours = mongoose.model("StoreHours", storeHoursSchema);

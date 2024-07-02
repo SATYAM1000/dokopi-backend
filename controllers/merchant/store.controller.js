@@ -4,10 +4,10 @@ import { validateFields } from "../../utils/validate-fields.js";
 import mongoose from "mongoose";
 import { uploadXeroxStoreImagesToS3 } from "../../utils/store-images-upload.js";
 import fs from "fs";
-import storeHoursModel from "../../models/store-hours.model.js";
 import newPricingModel from "../../models/new.pricing.model.js";
 import { BankDetails } from "../../models/bank-details.model.js";
 import supportModel from "../../models/support.model.js";
+import { StoreHours } from "../../models/store-hours.model.js";
 
 export const createNewXeroxStore = async (req, res) => {
   try {
@@ -549,7 +549,6 @@ export const setXeroxStoreOpenCloseHours = async (req, res) => {
     }
 
     const timings = req.body;
-    console.log("timings", timings);
 
     if (!timings) {
       return res.status(400).json({
@@ -558,7 +557,7 @@ export const setXeroxStoreOpenCloseHours = async (req, res) => {
       });
     }
 
-    const storeOpeningClosingHours = await storeHoursModel.findOne({
+    const storeOpeningClosingHours = await StoreHours.findOne({
       storeId,
     });
 
@@ -599,7 +598,7 @@ export const setXeroxStoreOpenCloseHours = async (req, res) => {
       });
     }
 
-    await storeHoursModel.create({
+    await StoreHours.create({
       storeId,
       Monday: {
         open: timings.Monday.open,
@@ -673,7 +672,7 @@ export const getXeroxStoreOpenCloseHours = async (req, res) => {
       });
     }
 
-    const storeOpeningClosingHours = await storeHoursModel.findOne({
+    const storeOpeningClosingHours = await StoreHours.findOne({
       storeId,
     });
 
