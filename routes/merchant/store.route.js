@@ -10,7 +10,10 @@ import {
   uploadXeroxStoreImages,
   ConfigurStorePrice,
   NewPriceList,
-  deleteXeroxStoreImages
+  deleteXeroxStoreImages,
+  storeBankDetailsOfXeroxStore,
+  fetchXeroxStoreBankDetails,
+  supportFormForXeroxStore
 } from "../../controllers/merchant/store.controller.js";
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
 import { Router } from "express";
@@ -62,5 +65,14 @@ merchantStoreRouter.post("/configure-price", verifyMerchant, ConfigurStorePrice)
 //Endpoint to fetch Price List for store
 merchantStoreRouter.get("/new-price-list/:storeId", verifyMerchant, NewPriceList)
 
+//Endpoint to save - update bank details of xerox store
+merchantStoreRouter.post("/store-bank-details/:storeId", verifyMerchant, storeBankDetailsOfXeroxStore);
+
+//Endpoint to fetch bank details of xerox store
+merchantStoreRouter.get("/store-bank-details/:storeId", verifyMerchant, fetchXeroxStoreBankDetails);
+
+
+// Endpoint to submit support form for xerox store only
+merchantStoreRouter.post("/support/:storeId", verifyMerchant, supportFormForXeroxStore);
 
 export default merchantStoreRouter;

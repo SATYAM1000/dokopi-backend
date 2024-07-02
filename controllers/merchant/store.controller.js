@@ -6,6 +6,8 @@ import { uploadXeroxStoreImagesToS3 } from "../../utils/store-images-upload.js";
 import fs from "fs";
 import storeHoursModel from "../../models/store-hours.model.js";
 import newPricingModel from "../../models/new.pricing.model.js";
+import { BankDetails } from "../../models/bank-details.model.js";
+import supportModel from "../../models/support.model.js";
 
 export const createNewXeroxStore = async (req, res) => {
   try {
@@ -701,7 +703,7 @@ export const getXeroxStoreOpenCloseHours = async (req, res) => {
 export const ConfigurStorePrice = async (req, res) => {
   try {
     const PriceListRecvdFromUser = req.body.storePriceData;
-    const storeId = PriceListRecvdFromUser.storeId
+    const storeId = PriceListRecvdFromUser.storeId;
     console.log(req.body);
 
     if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
@@ -711,11 +713,14 @@ export const ConfigurStorePrice = async (req, res) => {
       });
     }
     //finding docs and updating the values of prices
-    let NewPriceList = await newPricingModel.findOneAndUpdate({ storeId }, PriceListRecvdFromUser)
+    let NewPriceList = await newPricingModel.findOneAndUpdate(
+      { storeId },
+      PriceListRecvdFromUser
+    );
 
     // if addingPrice is null,then this is new user addingis prices of store then create new storeprice List then continue
     if (!NewPriceList) {
-      NewPriceList = await newPricingModel.create(PriceListRecvdFromUser)
+      NewPriceList = await newPricingModel.create(PriceListRecvdFromUser);
       await NewPriceList.save();
     }
 
@@ -730,7 +735,7 @@ export const ConfigurStorePrice = async (req, res) => {
       success: false,
     });
   }
-}
+};
 
 export const NewPriceList = async (req, res) => {
   try {
@@ -758,6 +763,169 @@ export const NewPriceList = async (req, res) => {
     });
   } catch (error) {
     logger.error(`Error while getting store pricing: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const storeBankDetailsOfXeroxStore = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    const {
+      accountHolderName,
+      bankName,
+      accountNumber,
+      branchAddress,
+      ifscCode,
+    } = req.body;
+    if (
+      !accountHolderName ||
+      !bankName ||
+      !accountNumber ||
+      !branchAddress ||
+      !ifscCode
+    ) {
+      return res.status(400).json({
+        msg: "All fields are required!",
+        success: false,
+      });
+    }
+
+    const storeBankDetails = await BankDetails.findOne({ storeId });
+    if (!storeBankDetails) {
+      const newStoreBankDetails = await BankDetails.create({
+        accountHolderName,
+        bankName,
+        accountNumber,
+        branchAddress,
+        ifscCode,
+        storeId,
+      });
+      await newStoreBankDetails.save();
+
+      return res.status(201).json({
+        msg: "Store bank details added successfully!",
+        success: true,
+      });
+    }
+
+    storeBankDetails.accountHolderName = accountHolderName;
+    storeBankDetails.bankName = bankName;
+    storeBankDetails.accountNumber = accountNumber;
+    storeBankDetails.branchAddress = branchAddress;
+    storeBankDetails.ifscCode = ifscCode;
+
+    await storeBankDetails.save();
+
+    return res.status(200).json({
+      msg: "Store bank details updated successfully!",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store bank details: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const fetchXeroxStoreBankDetails = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const storeBankDetails = await BankDetails.findOne({ storeId });
+
+    if (!storeBankDetails) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      msg: "Store bank details fetched successfully!",
+      success: true,
+      data: storeBankDetails,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store bank details: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const supportFormForXeroxStore = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    const { name, email, phone, message } = req.body.formData;
+
+    if (!name || !email || !phone || !message) {
+      return res.status(400).json({
+        msg: "All fields are required!",
+        success: false,
+      });
+    }
+
+    const newSupport = new supportModel({
+      storeId,
+      name,
+      email,
+      phone,
+      message,
+    });
+    await newSupport.save();
+
+    return res.status(201).json({
+      msg: "Support form submitted successfully!",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store bank details: ${error.message}`);
     return res.status(500).json({
       msg: "Internal server error!",
       error: error.message,

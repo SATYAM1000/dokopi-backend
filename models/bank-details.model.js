@@ -28,11 +28,7 @@ const bankDetailsSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    branchName: {
-      type: String,
-      trim: true,
-    },
-    upiId: {
+    branchAddress: {
       type: String,
       trim: true,
     },
