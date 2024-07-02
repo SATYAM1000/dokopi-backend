@@ -24,6 +24,10 @@ const newPricingModel = new mongoose.Schema({
             required: true,
             trim: true
         },
+        paper_size: {
+            type: String,
+            enum: ["A0", "A1", "A2", "A3", "A4", "A5"],
+        },
         quantity_types: [
             {
                 quantity_type: {

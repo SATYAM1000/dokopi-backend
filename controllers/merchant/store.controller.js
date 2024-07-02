@@ -747,9 +747,31 @@ export const NewPriceList = async (req, res) => {
       });
     }
 
-    const store = await newPricingModel.findOne({ storeId });
-
-    if (!store) {
+    const store = await newPricingModel.aggregate([
+      {
+        $match: {
+          storeId: new mongoose.Types.ObjectId(storeId)
+        }
+      },
+      {
+        $unwind: {
+          path: '$priceList',
+        }
+      },
+      {
+        $unwind: {
+          path: '$priceList.quantity_types',
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          priceList: 1,
+          storeId: 1
+        }
+      },
+    ])
+    if (store.length == 0) {
       return res.status(404).json({
         msg: "Store not found!",
         success: false,
@@ -759,7 +781,9 @@ export const NewPriceList = async (req, res) => {
     return res.status(200).json({
       msg: "Store pricing fetched successfully!",
       success: true,
-      data: store,
+      data: {
+        priceList: store
+      },
     });
   } catch (error) {
     logger.error(`Error while getting store pricing: ${error.message}`);
