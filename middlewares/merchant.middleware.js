@@ -29,7 +29,7 @@ export const verifyMerchant = async (req, res, next) => {
         success: false,
       });
     }
-    if (user.role !== "MERCHANT") {
+    if (user.role !== "MERCHANT" && user.role !== "ADMIN" && user.role !== "USER") {
       return res.status(401).json({
         msg: "Unauthorized access",
         success: false,

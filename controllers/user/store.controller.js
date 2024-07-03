@@ -32,62 +32,76 @@ export const fetchNearestStores = async (req, res) => {
       });
     }
 
-    const nearestStoresResult = await XeroxStore.aggregate([
-      {
-        $geoNear: {
-          near: {
-            type: "Point",
-            coordinates: [userLatitude, userLongitude],
-          },
-          distanceField: "distance",
-          spherical: true,
-        },
+   const nearestStoresResult = await XeroxStore.aggregate([
+  {
+    $geoNear: {
+      near: {
+        type: "Point",
+        coordinates: [userLatitude, userLongitude],
       },
-      {
-        $match: {
-          "storeDetails.storeLocation.storeZipCode": userZipCode,
-          "storeStatus.isStoreVerified": true,
-          "storeStatus.isStoreBlocked": false,
-        },
-      },
-      {
-        $sort: { distance: 1 },
-      },
-      {
-        $facet: {
-          paginatedStores: [
-            { $skip: parseInt(req.query.skip) || 0 },
-            { $limit: parseInt(req.query.limit) || 10 },
-          ],
-          totalCount: [{ $count: "count" }],
-        },
-      },
-      {
-        $project: {
-          paginatedStores: 1,
-          totalCount: { $arrayElemAt: ["$totalCount.count", 0] },
-        },
-      },
-      {
-        $unwind: "$paginatedStores",
-      },
-      {
-        $project: {
-          storeName: "$paginatedStores.storeDetails.storeName",
-          storeLandmark:
-            "$paginatedStores.storeDetails.storeLocation.storeLandmark",
-          storeZipCode:
-            "$paginatedStores.storeDetails.storeLocation.storeZipCode",
-          storeCity: "$paginatedStores.storeDetails.storeLocation.storeCity",
-          storeServices: "$paginatedStores.storeDetails.storeServices",
-          distance: "$paginatedStores.distance",
-          storeId: "$paginatedStores._id",
-          storeImagesURL: "$paginatedStores.storeImagesURL",
-          storeCurrentStatus: "$paginatedStores.storeCurrentStatus",
-          storeLocationCoordinates: "$paginatedStores.storeLocationCoordinates",
-        },
-      },
-    ]);
+      distanceField: "distance",
+      spherical: true,
+    },
+  },
+  {
+    $match: {
+      "storeDetails.storeLocation.storeZipCode": userZipCode,
+      "storeStatus.isStoreVerified": true,
+      "storeStatus.isStoreBlocked": false,
+    },
+  },
+  {
+    $lookup: {
+      from: "storehours",
+      localField: "storeTiming",
+      foreignField: "_id",
+      as: "storeHours",
+    },
+  },
+  {
+    $addFields: {
+      storeHours: { $arrayElemAt: ["$storeHours", 0] }
+    }
+  },
+  {
+    $sort: { distance: 1 },
+  },
+  {
+    $facet: {
+      paginatedStores: [
+        { $skip: parseInt(req.query.skip) || 0 },
+        { $limit: parseInt(req.query.limit) || 10 },
+      ],
+      totalCount: [{ $count: "count" }],
+    },
+  },
+  {
+    $project: {
+      paginatedStores: 1,
+      totalCount: { $arrayElemAt: ["$totalCount.count", 0] },
+    },
+  },
+  {
+    $unwind: "$paginatedStores",
+  },
+  {
+    $project: {
+      storeName: "$paginatedStores.storeDetails.storeName",
+      storeLandmark: "$paginatedStores.storeDetails.storeLocation.storeLandmark",
+      storeZipCode: "$paginatedStores.storeDetails.storeLocation.storeZipCode",
+      storeCity: "$paginatedStores.storeDetails.storeLocation.storeCity",
+      storeServices: "$paginatedStores.storeDetails.storeServices",
+      distance: "$paginatedStores.distance",
+      storeId: "$paginatedStores._id",
+      storeImagesURL: "$paginatedStores.storeImagesURL",
+      storeCurrentStatus: "$paginatedStores.storeCurrentStatus",
+      storeLocationCoordinates: "$paginatedStores.storeLocationCoordinates",
+      storeHours: "$storeHours"
+    },
+  },
+]);
+
+    
 
     const totalStores = await XeroxStore.countDocuments({
       "storeDetails.storeLocation.storeZipCode": userZipCode,

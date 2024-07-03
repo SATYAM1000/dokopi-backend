@@ -6,7 +6,6 @@ const xeroxStoreSchema = new mongoose.Schema(
       storeRefrenceId: {
         type: String,
         unique: [true, "Store reference ID already exists"],
-        required: true,
         trim: true,
       },
       storeName: {
@@ -22,8 +21,8 @@ const xeroxStoreSchema = new mongoose.Schema(
       },
       storeEmail: {
         type: String,
-        required: true,
         trim: true,
+        required: true,
         unique: [true, "Email already exists"],
       },
       storeLocation: {
@@ -34,21 +33,13 @@ const xeroxStoreSchema = new mongoose.Schema(
         storeCountry: { type: String, trim: true },
       },
       storeLogoURL: { type: String, trim: true },
-      storeOpeningHours: {
-        Monday: { type: String, trim: true },
-        Tuesday: { type: String, trim: true },
-        Wednesday: { type: String, trim: true },
-        Thursday: { type: String, trim: true },
-        Friday: { type: String, trim: true },
-        Saturday: { type: String, trim: true },
-        Sunday: { type: String, trim: true },
-      },
+
       storeServices: [{ type: String }],
       storeDescription: { type: String, trim: true },
     },
     storeLocationCoordinates: {
       type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number], required: true },
+      coordinates: { type: [Number], default: [0, 0] },
     },
     storeTiming: {
       type: mongoose.Schema.Types.ObjectId,

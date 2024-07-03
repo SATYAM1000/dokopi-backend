@@ -91,6 +91,40 @@ export const createNewXeroxStore = async (req, res) => {
   }
 };
 
+export const getStartedForm = async (req, res) => {
+  try {
+    const { storeName, phoneNumber, storeEmail } = req.body;
+    console.log(storeName, phoneNumber, storeEmail);
+    if (!storeName || !phoneNumber || !storeEmail) {
+      return res.status(400).json({
+        msg: "All fields are required!",
+        success: false,
+      });
+    }
+
+    const newXeroxStore = new XeroxStore({
+      storeDetails: {
+        storeName: storeName,
+        storePhoneNumber: phoneNumber,
+        storeEmail: storeEmail,
+      },
+    });
+    await newXeroxStore.save();
+    return res.status(201).json({
+      msg: "Get started form submitted successfully!",
+      success: true,
+      newXeroxStoreId: newXeroxStore._id,
+    });
+  } catch (error) {
+    logger.error(`Error while setting get started form: ${error.message}`);
+    return res.status(500).json({
+      msg: "Something went wrong!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
 export const changeStoreStatus = async (req, res) => {
   try {
     const storeId = req.params.storeId;
@@ -215,7 +249,7 @@ export const getStorePricing = async (req, res) => {
     return res.status(200).json({
       msg: "Store pricing fetched successfully!",
       success: true,
-      data: store.storePrices,
+      store,
     });
   } catch (error) {
     logger.error(`Error while getting store pricing: ${error.message}`);
@@ -531,15 +565,16 @@ export const fetchXeroxStoreImages = async (req, res) => {
 
 export const setXeroxStoreOpenCloseHours = async (req, res) => {
   try {
-    const storeId = req.params.storeId;
-    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+    const xeroxStoreId = req.params.storeId;
+
+    if (!xeroxStoreId || !mongoose.Types.ObjectId.isValid(xeroxStoreId)) {
       return res.status(400).json({
         msg: "Invalid store id!",
         success: false,
       });
     }
 
-    const store = await XeroxStore.findById(storeId);
+    const store = await XeroxStore.findById(xeroxStoreId);
 
     if (!store) {
       return res.status(404).json({
@@ -557,38 +592,48 @@ export const setXeroxStoreOpenCloseHours = async (req, res) => {
       });
     }
 
-    const storeOpeningClosingHours = await StoreHours.findOne({
-      storeId,
+    let storeOpeningClosingHours = await StoreHours.findOne({
+      storeId: xeroxStoreId,
     });
 
     if (storeOpeningClosingHours) {
-      storeOpeningClosingHours.Monday.isOpen = timings.Monday.isOpen;
-      storeOpeningClosingHours.Monday.open = timings.Monday.open;
-      storeOpeningClosingHours.Monday.close = timings.Monday.close;
-
-      storeOpeningClosingHours.Tuesday.isOpen = timings.Tuesday.isOpen;
-      storeOpeningClosingHours.Tuesday.open = timings.Tuesday.open;
-      storeOpeningClosingHours.Tuesday.close = timings.Tuesday.close;
-
-      storeOpeningClosingHours.Wednesday.isOpen = timings.Wednesday.isOpen;
-      storeOpeningClosingHours.Wednesday.open = timings.Wednesday.open;
-      storeOpeningClosingHours.Wednesday.close = timings.Wednesday.close;
-
-      storeOpeningClosingHours.Thursday.isOpen = timings.Thursday.isOpen;
-      storeOpeningClosingHours.Thursday.open = timings.Thursday.open;
-      storeOpeningClosingHours.Thursday.close = timings.Thursday.close;
-
-      storeOpeningClosingHours.Friday.isOpen = timings.Friday.isOpen;
-      storeOpeningClosingHours.Friday.open = timings.Friday.open;
-      storeOpeningClosingHours.Friday.close = timings.Friday.close;
-
-      storeOpeningClosingHours.Saturday.isOpen = timings.Saturday.isOpen;
-      storeOpeningClosingHours.Saturday.open = timings.Saturday.open;
-      storeOpeningClosingHours.Saturday.close = timings.Saturday.close;
-
-      storeOpeningClosingHours.Sunday.isOpen = timings.Sunday.isOpen;
-      storeOpeningClosingHours.Sunday.open = timings.Sunday.open;
-      storeOpeningClosingHours.Sunday.close = timings.Sunday.close;
+      storeOpeningClosingHours = Object.assign(storeOpeningClosingHours, {
+        Monday: {
+          open: timings.Monday.open,
+          close: timings.Monday.close,
+          isOpen: timings.Monday.isOpen,
+        },
+        Tuesday: {
+          open: timings.Tuesday.open,
+          close: timings.Tuesday.close,
+          isOpen: timings.Tuesday.isOpen,
+        },
+        Wednesday: {
+          open: timings.Wednesday.open,
+          close: timings.Wednesday.close,
+          isOpen: timings.Wednesday.isOpen,
+        },
+        Thursday: {
+          open: timings.Thursday.open,
+          close: timings.Thursday.close,
+          isOpen: timings.Thursday.isOpen,
+        },
+        Friday: {
+          open: timings.Friday.open,
+          close: timings.Friday.close,
+          isOpen: timings.Friday.isOpen,
+        },
+        Saturday: {
+          open: timings.Saturday.open,
+          close: timings.Saturday.close,
+          isOpen: timings.Saturday.isOpen,
+        },
+        Sunday: {
+          open: timings.Sunday.open,
+          close: timings.Sunday.close,
+          isOpen: timings.Sunday.isOpen,
+        },
+      });
 
       await storeOpeningClosingHours.save();
 
@@ -598,8 +643,9 @@ export const setXeroxStoreOpenCloseHours = async (req, res) => {
       });
     }
 
+    // Create new StoreHours document
     await StoreHours.create({
-      storeId,
+      storeId: xeroxStoreId,
       Monday: {
         open: timings.Monday.open,
         close: timings.Monday.close,
@@ -749,27 +795,27 @@ export const NewPriceList = async (req, res) => {
     const store = await newPricingModel.aggregate([
       {
         $match: {
-          storeId: new mongoose.Types.ObjectId(storeId)
-        }
+          storeId: new mongoose.Types.ObjectId(storeId),
+        },
       },
       {
         $unwind: {
-          path: '$priceList',
-        }
+          path: "$priceList",
+        },
       },
       {
         $unwind: {
-          path: '$priceList.quantity_types',
-        }
+          path: "$priceList.quantity_types",
+        },
       },
       {
         $project: {
           _id: 0,
           priceList: 1,
-          storeId: 1
-        }
+          storeId: 1,
+        },
       },
-    ])
+    ]);
     if (store.length == 0) {
       return res.status(404).json({
         msg: "Store not found!",
@@ -781,7 +827,7 @@ export const NewPriceList = async (req, res) => {
       msg: "Store pricing fetched successfully!",
       success: true,
       data: {
-        priceList: store
+        priceList: store,
       },
     });
   } catch (error) {
