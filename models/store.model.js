@@ -68,6 +68,7 @@ const xeroxStoreSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "BankDetails",
     },
+    
     storeOwner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     storeReviews: [
       { type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" },

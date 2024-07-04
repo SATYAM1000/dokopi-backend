@@ -93,8 +93,14 @@ export const createNewXeroxStore = async (req, res) => {
 
 export const getStartedForm = async (req, res) => {
   try {
-    const { storeName, phoneNumber, storeEmail } = req.body;
-    
+    const { storeName, phoneNumber, storeEmail, userId } = req.body;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        msg: "Invalid user id!",
+        success: false,
+      });
+    }
+
     if (!storeName || !phoneNumber || !storeEmail) {
       return res.status(400).json({
         msg: "All fields are required!",
@@ -104,20 +110,21 @@ export const getStartedForm = async (req, res) => {
 
     const existingStore = await XeroxStore.findOne({
       $or: [
-        { 'storeDetails.storeEmail': storeEmail },
-        { 'storeDetails.storePhoneNumber': phoneNumber }
-      ]
+        { storeOwner: userId },
+        { "storeDetails.storeEmail": storeEmail },
+        { "storeDetails.storePhoneNumber": phoneNumber },
+      ],
     });
 
     if (existingStore) {
-      let errorMsg = '';
+      let errorMsg = "";
       if (existingStore.storeDetails.storeEmail === storeEmail) {
-        errorMsg = 'A store with this email account already exists';
+        errorMsg = "A store with this email account already exists";
       } else if (existingStore.storeDetails.storePhoneNumber === phoneNumber) {
-        errorMsg = 'A store with this phone number already exists';
+        errorMsg = "A store with this phone number already exists";
       }
       return res.status(400).json({
-        msg: errorMsg,
+        msg: errorMsg || "Store already exists!",
         success: false,
       });
     }
@@ -128,6 +135,7 @@ export const getStartedForm = async (req, res) => {
         storePhoneNumber: phoneNumber,
         storeEmail: storeEmail,
       },
+      storeOwner: userId,
     });
     await newXeroxStore.save();
 
@@ -145,7 +153,6 @@ export const getStartedForm = async (req, res) => {
     });
   }
 };
-
 
 export const changeStoreStatus = async (req, res) => {
   try {
