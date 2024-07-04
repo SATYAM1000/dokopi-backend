@@ -18,7 +18,6 @@ export const uploadFileToS3 = async (req, res) => {
       });
     }
 
-
     if (!req.file) {
       if (filePath && fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
