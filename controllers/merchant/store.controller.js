@@ -352,7 +352,7 @@ export const updateStoreBasicDetails = async (req, res) => {
     const storeId = req.params.storeId;
     if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
-        msg: "Invalid store id!",
+        msg: "Store ID is invalid!",
         success: false,
       });
     }
@@ -402,13 +402,13 @@ export const updateStoreBasicDetails = async (req, res) => {
 
     if (!updatedStore) {
       return res.status(404).json({
-        msg: "Store not found!",
+        msg: "Store not exist!",
         success: false,
       });
     }
 
     return res.status(200).json({
-      msg: "Store basic details updated successfully!",
+      msg: "Store updated successfully!",
       success: true,
       data: updatedStore,
     });
