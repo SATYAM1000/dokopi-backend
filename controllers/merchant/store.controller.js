@@ -94,10 +94,30 @@ export const createNewXeroxStore = async (req, res) => {
 export const getStartedForm = async (req, res) => {
   try {
     const { storeName, phoneNumber, storeEmail } = req.body;
-    console.log(storeName, phoneNumber, storeEmail);
+    
     if (!storeName || !phoneNumber || !storeEmail) {
       return res.status(400).json({
         msg: "All fields are required!",
+        success: false,
+      });
+    }
+
+    const existingStore = await XeroxStore.findOne({
+      $or: [
+        { 'storeDetails.storeEmail': storeEmail },
+        { 'storeDetails.storePhoneNumber': phoneNumber }
+      ]
+    });
+
+    if (existingStore) {
+      let errorMsg = '';
+      if (existingStore.storeDetails.storeEmail === storeEmail) {
+        errorMsg = 'A store with this email account already exists';
+      } else if (existingStore.storeDetails.storePhoneNumber === phoneNumber) {
+        errorMsg = 'A store with this phone number already exists';
+      }
+      return res.status(400).json({
+        msg: errorMsg,
         success: false,
       });
     }
@@ -110,6 +130,7 @@ export const getStartedForm = async (req, res) => {
       },
     });
     await newXeroxStore.save();
+
     return res.status(201).json({
       msg: "Get started form submitted successfully!",
       success: true,
@@ -124,6 +145,7 @@ export const getStartedForm = async (req, res) => {
     });
   }
 };
+
 
 export const changeStoreStatus = async (req, res) => {
   try {
