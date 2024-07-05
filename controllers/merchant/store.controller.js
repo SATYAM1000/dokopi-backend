@@ -173,12 +173,6 @@ export const changeStoreStatus = async (req, res) => {
     }
 
     const store = await XeroxStore.findById(storeId);
-    if (!store) {
-      return res.status(404).json({
-        msg: "Store not found!",
-        success: false,
-      });
-    }
 
     store.storeCurrentStatus = state;
     if (state === "open") {
@@ -505,9 +499,19 @@ export const uploadXeroxStoreImages = async (req, res) => {
       });
     }
 
-    const fileURL = await uploadXeroxStoreImagesToS3(filePath);
+    const key = await uploadXeroxStoreImagesToS3(filePath);
+    if (!key) {
+      if (filePath && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      logger.error("File not found!");
+      return res.status(400).json({
+        msg: "File not found!",
+        success: false,
+      });
+    }
 
-    store.storeImagesURL.push(fileURL);
+    store.storeImagesKeys.push(key);
     if (store.storeSetUpProgress.step2 === false) {
       store.storeSetUpProgress.step2 = true;
     }
@@ -520,7 +524,7 @@ export const uploadXeroxStoreImages = async (req, res) => {
     return res.status(200).json({
       msg: "Store images uploaded successfully!",
       success: true,
-      data: fileURL,
+      data: key,
     });
   } catch (error) {
     logger.error(`Error while uploading store images: ${error.message}`);
@@ -556,14 +560,8 @@ export const deleteXeroxStoreImages = async (req, res) => {
     }
 
     const store = await XeroxStore.findById(storeId);
-    if (!store) {
-      return res.status(404).json({
-        msg: "Store not found!",
-        success: false,
-      });
-    }
 
-    const index = store.storeImagesURL.indexOf(fileURL);
+    const index = store.storeImagesKeys.indexOf(fileURL);
     if (index === -1) {
       return res.status(404).json({
         msg: "Image not found!",
@@ -571,13 +569,13 @@ export const deleteXeroxStoreImages = async (req, res) => {
       });
     }
 
-    store.storeImagesURL.splice(index, 1);
+    store.storeImagesKeys.splice(index, 1);
     await store.save();
 
     return res.status(200).json({
       msg: "Image deleted successfully!",
       success: true,
-      data: store.storeImagesURL,
+      data: store.storeImagesKeys,
     });
   } catch (error) {
     logger.error(`Error while deleting store images: ${error.message}`);
@@ -602,17 +600,10 @@ export const fetchXeroxStoreImages = async (req, res) => {
 
     const store = await XeroxStore.findById(storeId);
 
-    if (!store) {
-      return res.status(404).json({
-        msg: "Store not found!",
-        success: false,
-      });
-    }
-
     return res.status(200).json({
       msg: "Store images fetched successfully!",
       success: true,
-      data: store.storeImagesURL,
+      data: store.storeImagesKeys,
     });
   } catch (error) {
     logger.error(`Error while fetching store images: ${error.message}`);
@@ -636,13 +627,6 @@ export const setXeroxStoreOpenCloseHours = async (req, res) => {
     }
 
     const store = await XeroxStore.findById(xeroxStoreId);
-
-    if (!store) {
-      return res.status(404).json({
-        msg: "Store not found!",
-        success: false,
-      });
-    }
 
     const timings = req.body;
 
@@ -784,13 +768,6 @@ export const getXeroxStoreOpenCloseHours = async (req, res) => {
 
     const store = await XeroxStore.findById(storeId);
 
-    if (!store) {
-      return res.status(404).json({
-        msg: "Store not found!",
-        success: false,
-      });
-    }
-
     const storeOpeningClosingHours = await StoreHours.findOne({
       storeId,
     });
@@ -925,13 +902,6 @@ export const storeBankDetailsOfXeroxStore = async (req, res) => {
 
     const store = await XeroxStore.findById(storeId);
 
-    if (!store) {
-      return res.status(404).json({
-        msg: "Store not found!",
-        success: false,
-      });
-    }
-
     const {
       accountHolderName,
       bankName,
@@ -1037,12 +1007,6 @@ export const supportFormForXeroxStore = async (req, res) => {
     }
 
     const store = await XeroxStore.findById(storeId);
-    if (!store) {
-      return res.status(404).json({
-        msg: "Store not found!",
-        success: false,
-      });
-    }
 
     const { name, email, phone, message } = req.body.formData;
 

@@ -17,13 +17,14 @@ import {
   getStartedForm
 } from "../../controllers/merchant/store.controller.js";
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
+import {verifyUser} from "../../middlewares/user.middleware.js";
 import { Router } from "express";
 import upload from "../../middlewares/multer.middleware.js";
 
 const merchantStoreRouter = Router();
 
 //Endpoint to submit get started form for xerox store
-merchantStoreRouter.post("/get-started", getStartedForm);
+merchantStoreRouter.post("/get-started", verifyUser, getStartedForm);
 
 // Endpoint to create a new Xerox store
 merchantStoreRouter.post(

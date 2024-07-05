@@ -19,13 +19,13 @@ export const uploadXeroxStoreImagesToS3 = async (localFilePath) => {
   }
 
   const fileStream = fs.createReadStream(localFilePath);
-  const folderName = "xeroxstores"; // Folder in S3 bucket
-  const fileName = `${folderName}/${path.basename(localFilePath)}`;
+  const folderName = "xeroxstores";
+  const objectKey=`${folderName}/${path.basename(localFilePath)}`
 
   const uploadParams = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Body: fileStream,
-    Key: fileName,
+    Key: objectKey,
   };
 
   const uploadOptions = {
@@ -43,7 +43,7 @@ export const uploadXeroxStoreImagesToS3 = async (localFilePath) => {
 
     const data = await parallelUpload.done();
     fs.unlinkSync(localFilePath);
-    return data.Location;
+    return objectKey;
   } catch (error) {
     logger.error(`Error while uploading store images: ${error.message}`);
     fs.unlinkSync(localFilePath);

@@ -89,6 +89,12 @@ const xeroxStoreSchema = new mongoose.Schema(
       step4: { type: Boolean, default: false }, //  bank details
     },
     isStoreSetupComplete: { type: Boolean, default: false },
+    storeImagesKeys: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     socketId: {
       type: String,
       trim: true,
