@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 
 const xeroxStoreSchema = new mongoose.Schema(
   {
@@ -7,6 +8,7 @@ const xeroxStoreSchema = new mongoose.Schema(
         type: String,
         unique: [true, "Store reference ID already exists"],
         trim: true,
+        default: () => `store-${crypto.randomBytes(4).toString("hex")}`,
       },
       storeName: {
         type: String,
