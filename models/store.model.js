@@ -34,8 +34,6 @@ const xeroxStoreSchema = new mongoose.Schema(
         storeState: { type: String, trim: true },
         storeCountry: { type: String, trim: true },
       },
-      storeLogoURL: { type: String, trim: true },
-
       storeServices: [{ type: String }],
       storeDescription: { type: String, trim: true },
     },
@@ -90,7 +88,7 @@ const xeroxStoreSchema = new mongoose.Schema(
       step3: { type: Boolean, default: false }, //  open and close time
       step4: { type: Boolean, default: false }, //  bank details
     },
-    isStoreSetupComplete: { type: Boolean, default: false }, 
+    isStoreSetupComplete: { type: Boolean, default: false },
     socketId: {
       type: String,
       trim: true,
@@ -99,8 +97,10 @@ const xeroxStoreSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-xeroxStoreSchema.methods.updateSetupCompletion = function() {
-  this.isStoreSetupComplete = Object.values(this.setupProgress).every(step => step === true);
+xeroxStoreSchema.methods.updateSetupCompletion = function () {
+  this.isStoreSetupComplete = Object.values(this.setupProgress).every(
+    (step) => step === true
+  );
   return this.isStoreSetupComplete;
 };
 
