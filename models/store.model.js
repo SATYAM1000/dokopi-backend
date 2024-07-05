@@ -68,7 +68,7 @@ const xeroxStoreSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "BankDetails",
     },
-    
+
     storeOwner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     storeReviews: [
       { type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" },
@@ -82,7 +82,13 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeCoupons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Coupon" }],
     isStoreOpen: { type: Boolean, default: true },
     storeOpenedAt: { type: Date, default: Date.now },
-    storeCreatedDate: { type: Date, default: Date.now },
+    storeSetUpProgress: {
+      step1: { type: Boolean, default: false }, //  Profile information
+      step2: { type: Boolean, default: false }, // images upload
+      step3: { type: Boolean, default: false }, //  open and close time
+      step4: { type: Boolean, default: false }, //  bank details
+    },
+    isStoreSetupComplete: { type: Boolean, default: false }, 
     socketId: {
       type: String,
       trim: true,
@@ -90,6 +96,11 @@ const xeroxStoreSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+xeroxStoreSchema.methods.updateSetupCompletion = function() {
+  this.isStoreSetupComplete = Object.values(this.setupProgress).every(step => step === true);
+  return this.isStoreSetupComplete;
+};
 
 xeroxStoreSchema.index({ storeLocationCoordinates: "2dsphere" });
 

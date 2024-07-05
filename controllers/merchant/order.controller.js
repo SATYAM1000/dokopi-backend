@@ -10,7 +10,8 @@ export const getXeroxStoreOrdersById = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
-        msg: "Invalid store ID!",
+        code: "INVALID_STORE_ID",
+        msg: "Store id is invalid!",
         success: false,
       });
     }
@@ -18,7 +19,17 @@ export const getXeroxStoreOrdersById = async (req, res) => {
     const store = await XeroxStore.findById(storeId);
     if (!store) {
       return res.status(404).json({
-        msg: "Store not found!",
+        code: "STORE_NOT_EXIST",
+        msg: "Store not exist!",
+        success: false,
+      });
+    }
+
+    if (!store.isStoreSetupComplete) {
+      return res.status(400).json({
+        code: "SETUP_INCOMPLETE",
+        storeSetUpProgress: store.storeSetUpProgress,
+        msg: "Store setup is not completed. Please complete the store setup.",
         success: false,
       });
     }
@@ -32,13 +43,13 @@ export const getXeroxStoreOrdersById = async (req, res) => {
       const selectedDate = new Date(date);
       if (isNaN(selectedDate.getTime())) {
         return res.status(400).json({
+          code: "INVALID_DATE_FORMAT",
           msg: "Invalid date format!",
           success: false,
         });
       }
 
-      // Convert the selected date to IST and set the start and end of the day in IST
-      const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+      const IST_OFFSET = 5.5 * 60 * 60 * 1000;
 
       const startOfDayIST = new Date(selectedDate.getTime() + IST_OFFSET);
       startOfDayIST.setUTCHours(0, 0, 0, 0);
@@ -46,7 +57,6 @@ export const getXeroxStoreOrdersById = async (req, res) => {
       const endOfDayIST = new Date(selectedDate.getTime() + IST_OFFSET);
       endOfDayIST.setUTCHours(23, 59, 59, 999);
 
-      // Convert the start and end of the day back to UTC
       const startOfDayUTC = new Date(startOfDayIST.getTime() - IST_OFFSET);
       const endOfDayUTC = new Date(endOfDayIST.getTime() - IST_OFFSET);
 
@@ -68,7 +78,8 @@ export const getXeroxStoreOrdersById = async (req, res) => {
 
     if (!orders || !orders.length) {
       return res.status(404).json({
-        msg: "No orders found!",
+        code: "NO_ORDERS_FOUND",
+        msg: "No orders found for the specified date.",
         success: false,
       });
     }
@@ -79,14 +90,16 @@ export const getXeroxStoreOrdersById = async (req, res) => {
       data: orders,
     });
   } catch (error) {
-    console.error(`Error while fetching orders: ${error.message}`);
+    logger.error(`Error while fetching orders: ${error.message}`);
     return res.status(500).json({
+      code: "INTERNAL_SERVER_ERROR",
       msg: "Something went wrong!",
       error: error.message,
       success: false,
     });
   }
 };
+
 
 export const isOrderViewed = async (req, res) => {
   try {

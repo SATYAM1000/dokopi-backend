@@ -349,6 +349,7 @@ export const getStoreBasicDetails = async (req, res) => {
 
 export const updateStoreBasicDetails = async (req, res) => {
   try {
+    console.log("req.user is ", req.user._id);
     const storeId = req.params.storeId;
     if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
@@ -372,7 +373,28 @@ export const updateStoreBasicDetails = async (req, res) => {
       },
     } = req.body;
 
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    if (store.storeOwner.toString() !== req.user._id.toString()) {
+      console.log("req.user._id is ", req.user._id);
+      console.log("store.storeOwner is ", store.storeOwner);
+      return res.status(403).json({
+        msg: "You are not authorized to perform this action!",
+        success: false,
+      });
+    }
+
     let updateObject = {};
+    if (store.storeSetUpProgress.step1 === false)
+      updateObject["storeSetUpProgress.step1"] = true;
+
     if (storeRefrenceId)
       updateObject["storeDetails.storeRefrenceId"] = storeRefrenceId;
     if (storeName) updateObject["storeDetails.storeName"] = storeName;
@@ -392,6 +414,13 @@ export const updateStoreBasicDetails = async (req, res) => {
         storeLongitude,
         storeLatitude,
       ];
+    }
+
+    if (Object.keys(updateObject).length === 0) {
+      return res.status(400).json({
+        msg: "No data to update!",
+        success: false,
+      });
     }
 
     const updatedStore = await XeroxStore.findByIdAndUpdate(
@@ -479,6 +508,9 @@ export const uploadXeroxStoreImages = async (req, res) => {
     const fileURL = await uploadXeroxStoreImagesToS3(filePath);
 
     store.storeImagesURL.push(fileURL);
+    if (store.storeSetUpProgress.step2 === false) {
+      store.storeSetUpProgress.step2 = true;
+    }
     await store.save();
 
     if (filePath && fs.existsSync(filePath)) {
@@ -625,46 +657,58 @@ export const setXeroxStoreOpenCloseHours = async (req, res) => {
       storeId: xeroxStoreId,
     });
 
+    if (!storeOpeningClosingHours) {
+      storeOpeningClosingHours = new StoreHours({
+        storeId: xeroxStoreId,
+      });
+    }
+
     if (storeOpeningClosingHours) {
       storeOpeningClosingHours = Object.assign(storeOpeningClosingHours, {
         Monday: {
-          open: timings.Monday.open,
-          close: timings.Monday.close,
-          isOpen: timings.Monday.isOpen,
+          open: timings?.Monday?.open,
+          close: timings?.Monday?.close,
+          isOpen: timings?.Monday?.isOpen,
         },
         Tuesday: {
-          open: timings.Tuesday.open,
-          close: timings.Tuesday.close,
-          isOpen: timings.Tuesday.isOpen,
+          open: timings?.Tuesday?.open,
+          close: timings?.Tuesday?.close,
+          isOpen: timings?.Tuesday?.isOpen,
         },
         Wednesday: {
-          open: timings.Wednesday.open,
-          close: timings.Wednesday.close,
-          isOpen: timings.Wednesday.isOpen,
+          open: timings?.Wednesday?.open,
+          close: timings?.Wednesday?.close,
+          isOpen: timings?.Wednesday?.isOpen,
         },
         Thursday: {
-          open: timings.Thursday.open,
-          close: timings.Thursday.close,
-          isOpen: timings.Thursday.isOpen,
+          open: timings?.Thursday?.open,
+          close: timings?.Thursday?.close,
+          isOpen: timings?.Thursday?.isOpen,
         },
         Friday: {
-          open: timings.Friday.open,
-          close: timings.Friday.close,
-          isOpen: timings.Friday.isOpen,
+          open: timings?.Friday?.open,
+          close: timings?.Friday?.close,
+          isOpen: timings?.Friday?.isOpen,
         },
         Saturday: {
-          open: timings.Saturday.open,
-          close: timings.Saturday.close,
-          isOpen: timings.Saturday.isOpen,
+          open: timings?.Saturday?.open,
+          close: timings?.Saturday?.close,
+          isOpen: timings?.Saturday?.isOpen,
         },
         Sunday: {
-          open: timings.Sunday.open,
-          close: timings.Sunday.close,
-          isOpen: timings.Sunday.isOpen,
+          open: timings?.Sunday?.open,
+          close: timings?.Sunday?.close,
+          isOpen: timings?.Sunday?.isOpen,
         },
       });
 
-      await storeOpeningClosingHours.save();
+      if (store.storeSetUpProgress.step3 === false) {
+        store.storeSetUpProgress.step3 = true;
+      }
+
+      const schedule = await storeOpeningClosingHours.save();
+      store.storeTiming = schedule._id;
+      await store.save();
 
       return res.status(200).json({
         msg: "Store open/close hours updated successfully!",
