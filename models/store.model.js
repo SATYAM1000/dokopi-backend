@@ -44,6 +44,7 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeTiming: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "StoreHours",
+      
     },
     storeStatus: {
       isStoreVerified: { type: Boolean, default: false },

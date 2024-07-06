@@ -3,10 +3,10 @@ import { XeroxStore } from "../../models/store.model.js";
 import { StoreReview } from "../../models/review.model.js";
 import mongoose from "mongoose";
 
-//GET: `/api/v1/user/stores/nearest-stores?latitude=${latitude}&longitude=${longitude}&userZipCode=${userZipCode}&limit=${limit}&skip=${skip}`
+
 export const fetchNearestStores = async (req, res) => {
   try {
-    const { latitude, longitude, userZipCode } = req.query;
+    const { latitude, longitude, userZipCode, skip = 0, limit = 10 } = req.query;
 
     if (!userZipCode) {
       return res.status(400).json({
@@ -27,112 +27,103 @@ export const fetchNearestStores = async (req, res) => {
 
     if (isNaN(userLatitude) || isNaN(userLongitude)) {
       return res.status(400).json({
-        msg: "latitude and longitude must be numbers",
+        msg: "Latitude and longitude must be numbers",
         success: false,
       });
     }
 
-   const nearestStoresResult = await XeroxStore.aggregate([
-  {
-    $geoNear: {
-      near: {
-        type: "Point",
-        coordinates: [userLatitude, userLongitude],
+    const nearestStoresResult = await XeroxStore.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [userLongitude, userLatitude], // Longitude first
+          },
+          distanceField: "distance",
+          spherical: true,
+        },
       },
-      distanceField: "distance",
-      spherical: true,
-    },
-  },
-  {
-    $match: {
-      "storeDetails.storeLocation.storeZipCode": userZipCode,
-      "storeStatus.isStoreVerified": true,
-      "storeStatus.isStoreBlocked": false,
-    },
-  },
-  {
-    $lookup: {
-      from: "storehours",
-      localField: "storeTiming",
-      foreignField: "_id",
-      as: "storeHours",
-    },
-  },
-  {
-    $addFields: {
-      storeHours: { $arrayElemAt: ["$storeHours", 0] }
-    }
-  },
-  {
-    $sort: { distance: 1 },
-  },
-  {
-    $facet: {
-      paginatedStores: [
-        { $skip: parseInt(req.query.skip) || 0 },
-        { $limit: parseInt(req.query.limit) || 10 },
-      ],
-      totalCount: [{ $count: "count" }],
-    },
-  },
-  {
-    $project: {
-      paginatedStores: 1,
-      totalCount: { $arrayElemAt: ["$totalCount.count", 0] },
-    },
-  },
-  {
-    $unwind: "$paginatedStores",
-  },
-  {
-    $project: {
-      storeName: "$paginatedStores.storeDetails.storeName",
-      storeLandmark: "$paginatedStores.storeDetails.storeLocation.storeLandmark",
-      storeZipCode: "$paginatedStores.storeDetails.storeLocation.storeZipCode",
-      storeCity: "$paginatedStores.storeDetails.storeLocation.storeCity",
-      storeServices: "$paginatedStores.storeDetails.storeServices",
-      distance: "$paginatedStores.distance",
-      storeId: "$paginatedStores._id",
-      storeImagesURL: "$paginatedStores.storeImagesURL",
-      storeCurrentStatus: "$paginatedStores.storeCurrentStatus",
-      storeLocationCoordinates: "$paginatedStores.storeLocationCoordinates",
-      storeHours: "$storeHours"
-    },
-  },
-]);
+      {
+        $match: {
+          "storeDetails.storeLocation.storeZipCode": userZipCode,
+          "storeStatus.isStoreVerified": true,
+          "storeStatus.isStoreBlocked": false,
+        },
+      },
+      {
+        $lookup: {
+          from: "storehours", // Ensure this matches the actual collection name in MongoDB
+          localField: "storeTiming",
+          foreignField: "_id",
+          as: "storeHours",
+        },
+      },
+      {
+        $unwind: {
+          path: "$storeHours",
+          preserveNullAndEmptyArrays: true, // In case some stores do not have store hours set
+        },
+      },
+      {
+        $sort: { distance: 1 },
+      },
+      {
+        $facet: {
+          paginatedStores: [
+            { $skip: parseInt(skip, 10) },
+            { $limit: parseInt(limit, 10) },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+      {
+        $project: {
+          paginatedStores: 1,
+          totalCount: { $arrayElemAt: ["$totalCount.count", 0] },
+        },
+      },
+    ]);
 
-    
+    const totalStores = nearestStoresResult[0].totalCount || 0;
+    const stores = nearestStoresResult[0].paginatedStores;
 
-    const totalStores = await XeroxStore.countDocuments({
-      "storeDetails.storeLocation.storeZipCode": userZipCode,
-      "storeStatus.isStoreVerified": true,
-      "storeStatus.isStoreBlocked": false,
-    });
-
-    if (nearestStoresResult.length === 0) {
+    if (stores.length === 0) {
       return res.status(404).json({
         msg: "Nearest stores not found!",
         success: false,
       });
     }
 
-    const skipValue =
-      typeof req.query.skip === "string" ? parseInt(req.query.skip, 10) : 0;
+    const currentPage = Math.floor(skip / limit) + 1;
+    const hasMore = totalStores > skip + stores.length;
 
     return res.status(200).json({
       success: true,
       msg: "Nearest stores fetched successfully!",
       data: {
-        stores: nearestStoresResult,
+        stores: stores.map(store => ({
+          storeName: store.storeDetails.storeName,
+          storeLandmark: store.storeDetails.storeLocation.storeLandmark,
+          storeZipCode: store.storeDetails.storeLocation.storeZipCode,
+          storeCity: store.storeDetails.storeLocation.storeCity,
+          storeServices: store.storeDetails.storeServices,
+          distance: store.distance,
+          storeId: store._id,
+          storeImagesURL: store.storeImagesURL,
+          storeCurrentStatus: store.storeCurrentStatus,
+          storeLocationCoordinates: store.storeLocationCoordinates,
+          storeHours: store.storeHours, // Include store hours
+          storeImagesKeys: store.storeImagesKeys,
+        })),
         totalCount: totalStores,
         pagination: {
-          currentPage: Math.floor(req.query.skip / req.query.limit) + 1,
-          hasMore: totalStores > nearestStoresResult.length + skipValue,
+          currentPage,
+          hasMore,
         },
       },
     });
   } catch (error) {
-    logger.error(`Error while fetching nearest stores: ${error.message}`);
+    console.error(`Error while fetching nearest stores: ${error.message}`);
     return res.status(500).json({
       msg: "Internal server error!",
       error: error.message,
@@ -140,6 +131,9 @@ export const fetchNearestStores = async (req, res) => {
     });
   }
 };
+
+
+
 
 //GET: `/api/v1/user/stores/get-store-info/:storeId`
 export const fetchSingleStoreDetailsById = async (req, res) => {
