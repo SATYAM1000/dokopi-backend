@@ -45,7 +45,7 @@ export const fetchNearestStores = async (req, res) => {
       },
       {
         $match: {
-          "storeDetails.storeLocation.storeZipCode": userZipCode,
+          // "storeDetails.storeLocation.storeZipCode": userZipCode,
           "storeStatus.isStoreVerified": true,
           "storeStatus.isStoreBlocked": false,
         },
