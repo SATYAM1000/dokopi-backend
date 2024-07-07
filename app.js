@@ -60,6 +60,9 @@ app.get("/api/test", (req, res) => {
   res.send("Hello, World!");
 });
 
+import {userRouter} from "./routes/user/user.route.js";
+app.use("/api/v1/user", userRouter);
+
 import userStoreRouter from "./routes/user/store.route.js";
 app.use("/api/v1/user/stores", userStoreRouter);
 
