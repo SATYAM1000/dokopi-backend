@@ -55,12 +55,11 @@ connectDB(process.env.DATABASE_URL)
     process.exit(1);
   });
 
-  
 app.get("/api/test", (req, res) => {
   res.send("Hello, World!");
 });
 
-import {userRouter} from "./routes/user/user.route.js";
+import { userRouter } from "./routes/user/user.route.js";
 app.use("/api/v1/user", userRouter);
 
 import userStoreRouter from "./routes/user/store.route.js";
@@ -87,10 +86,20 @@ app.use("/api/v1/user/orders", userOrderRouter);
 import invoiceRouter from "./routes/user/invoice.route.js";
 app.use("/api/v1/invoice", invoiceRouter);
 
-
 import locationRouter from "./routes/location/locationfromname.js";
-app.use("/api/v1", locationRouter)
+app.use("/api/v1", locationRouter);
+
+import { xeroxStorePriceRouter } from "./routes/merchant/price.route.js";
+app.use("/api/v1/store/pricing", xeroxStorePriceRouter);
+
+
+
+
+
+
+
+
+
 
 
 socketHandlers(io, logger);
-

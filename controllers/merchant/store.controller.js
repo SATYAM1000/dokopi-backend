@@ -799,7 +799,7 @@ export const ConfigurStorePrice = async (req, res) => {
   try {
     const PriceListRecvdFromUser = req.body.storePriceData;
     const storeId = PriceListRecvdFromUser.storeId;
-    console.log(req.body);
+    
 
     if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
