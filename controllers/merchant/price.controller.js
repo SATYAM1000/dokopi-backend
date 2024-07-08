@@ -67,7 +67,13 @@ export const setXeroxStorePricing = async (req, res) => {
       xeroxStore.pricing = storePricing._id;
       if (xeroxStore.storeSetUpProgress.step4 === false) {
         xeroxStore.storeSetUpProgress.step4 = true;
-        xeroxStore.isStoreSetupComplete = true;
+        if (
+          xeroxStore.storeSetUpProgress.step1 === true &&
+          xeroxStore.storeSetUpProgress.step2 === true &&
+          xeroxStore.storeSetUpProgress.step3 === true
+        ) {
+          xeroxStore.isStoreSetupComplete = true;
+        }
       }
       await xeroxStore.save();
     }
