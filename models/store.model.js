@@ -63,7 +63,7 @@ const xeroxStoreSchema = new mongoose.Schema(
     ],
     pricing: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Pricing",
+      ref: "xeroxstorepricing",
     },
     bankDetails: {
       type: mongoose.Schema.Types.ObjectId,

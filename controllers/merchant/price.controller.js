@@ -1,4 +1,5 @@
 import { logger } from "../../config/logger.config.js";
+import { XeroxStore } from "../../models/store.model.js";
 import { xeroxstorepricing } from "../../models/xeroxstorepricing.model.js";
 import mongoose from "mongoose";
 
@@ -11,6 +12,8 @@ export const setXeroxStorePricing = async (req, res) => {
         success: false,
       });
     }
+
+    const { printType, paperSize, printingSides, basePrice } = req.body;
 
     const newPricingRuleRcvd = req.body.newPricingRule;
 
@@ -60,12 +63,14 @@ export const setXeroxStorePricing = async (req, res) => {
 
     if (!storePricing) {
       storePricing = new xeroxstorepricing({ storeId, priceList: [] });
+      const xeroxStore = await XeroxStore.findById(storeId);
+      xeroxStore.pricing = storePricing._id;
+      if (xeroxStore.storeSetUpProgress.step4 === false) {
+        xeroxStore.storeSetUpProgress.step4 = true;
+        xeroxStore.isStoreSetupComplete = true;
+      }
+      await xeroxStore.save();
     }
-
-    const printType = req.body.printType;
-    const printingSides = req.body.printingSides;
-    const paperSize = req.body.paperSize;
-    const basePrice = req.body.basePrice;
 
     if (
       !printType ||
@@ -129,6 +134,13 @@ export const setXeroxStorePricing = async (req, res) => {
     return res.status(200).json({
       msg: "Pricing rule added successfully!",
       success: true,
+      data: {
+        printType,
+        printingSides,
+        basePrice,
+        paperSize,
+        conditionsList: [newPricingRule],
+      },
     });
   } catch (error) {
     logger.error(`Error while setting v2 pricing: ${error.message}`);
@@ -153,6 +165,7 @@ export const getXeroxStorePricing = async (req, res) => {
     const storePricing = await xeroxstorepricing.findOne({ storeId });
     if (!storePricing) {
       return res.status(404).json({
+        code: "STORE_PRICING_NOT_FOUND",
         msg: "Store pricing not found!",
         success: false,
       });
