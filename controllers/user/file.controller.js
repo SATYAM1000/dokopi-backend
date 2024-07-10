@@ -58,7 +58,7 @@ export const uploadFileToS3 = async (req, res) => {
     return res.status(200).json({
       msg: "File uploaded successfully!",
       success: true,
-      url: uploadedFile,
+      key: uploadedFile,
       pageCount,
     });
   } catch (error) {

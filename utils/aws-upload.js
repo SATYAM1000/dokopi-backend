@@ -69,7 +69,9 @@ export const uploadToS3 = async (localFilePath) => {
       path.basename(localFilePath)
     );
 
-    return presignedURL;
+    const objectKey = path.basename(localFilePath);
+
+    return objectKey;
   } catch (error) {
     fs.unlinkSync(localFilePath);
     logger.error(`Error while uploading file: ${error.message}`);

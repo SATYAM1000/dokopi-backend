@@ -2,11 +2,17 @@ import { logger } from "../../config/logger.config.js";
 import { XeroxStore } from "../../models/store.model.js";
 import { StoreReview } from "../../models/review.model.js";
 import mongoose from "mongoose";
-
+import { populate } from "dotenv";
 
 export const fetchNearestStores = async (req, res) => {
   try {
-    const { latitude, longitude, userZipCode, skip = 0, limit = 10 } = req.query;
+    const {
+      latitude,
+      longitude,
+      userZipCode,
+      skip = 0,
+      limit = 10,
+    } = req.query;
 
     if (!userZipCode) {
       return res.status(400).json({
@@ -101,7 +107,7 @@ export const fetchNearestStores = async (req, res) => {
       success: true,
       msg: "Nearest stores fetched successfully!",
       data: {
-        stores: stores.map(store => ({
+        stores: stores.map((store) => ({
           storeName: store.storeDetails.storeName,
           storeLandmark: store.storeDetails.storeLocation.storeLandmark,
           storeZipCode: store.storeDetails.storeLocation.storeZipCode,
@@ -132,9 +138,6 @@ export const fetchNearestStores = async (req, res) => {
   }
 };
 
-
-
-
 //GET: `/api/v1/user/stores/get-store-info/:storeId`
 export const fetchSingleStoreDetailsById = async (req, res) => {
   try {
@@ -150,8 +153,6 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
       ? parseInt(req.query.pageNumber)
       : 1;
 
-    
-
     const pageSize = 4;
 
     const store = await XeroxStore.findById(storeId)
@@ -166,8 +167,11 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
         options: {
           sort: { createdAt: -1 },
         },
+      })
+      .populate({
+        path: "storeTiming", // Populating the storeTiming field with StoreHours data
+        select: "-createdAt -updatedAt -__v",
       });
-
 
     if (!store) {
       return res.status(404).json({
@@ -271,7 +275,9 @@ export const searchStores = async (req, res) => {
 
     if (storePhoneNumber) {
       searchCriteria.push({
-        "storeDetails.storePhoneNumber": { $regex: new RegExp(`^${storePhoneNumber}`, "i") },
+        "storeDetails.storePhoneNumber": {
+          $regex: new RegExp(`^${storePhoneNumber}`, "i"),
+        },
       });
     }
 

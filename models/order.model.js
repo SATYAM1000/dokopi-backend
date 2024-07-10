@@ -14,10 +14,11 @@ const orderSchema = new mongoose.Schema(
     cartItems: [
       {
         id: { type: String, required: true },
-        fileURL: { type: String, required: true },
-        fileOriginalName: { type: String },
-        fileSize: { type: String },
-        fileExtension: { type: String },
+        fileURL: { type: String },
+        fileKey: { type: String, required: true },
+        fileOriginalName: { type: String, required: true },
+        fileSize: { type: String, required: true },
+        fileExtension: { type: String, required: true },
         filePageCount: { type: Number, required: true },
         fileIconPath: { type: String, default: "/files-icon/other.svg" },
         fileCopiesCount: { type: Number, default: 1 },
@@ -25,14 +26,14 @@ const orderSchema = new mongoose.Schema(
         additionalServices: { type: String },
         filePaperType: {
           type: String,
-          enum: ["A4", "A3", "Letter"],
+          enum: ["A4", "A3", "A2", "A1", "A0"],
           default: "A4",
         },
         fileColorType: {
           type: String,
-          enum: ["black and white", "color", "mixed"],
+          enum: ["black_and_white", "simple_color", "digital_color", "mixed"],
         },
-        filePrintMode: { type: String, enum: ["simplex", "duplex"] },
+        filePrintMode: { type: String, enum: ["single_sided", "double_sided"] },
         fileColorPagesToPrint: { type: [String] },
       },
     ],
