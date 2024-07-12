@@ -92,29 +92,7 @@ app.use("/api/v1", locationRouter);
 import { xeroxStorePriceRouter } from "./routes/merchant/price.route.js";
 app.use("/api/v1/store/pricing", xeroxStorePriceRouter);
 
-app.get("/api/v1/maps", async (req, res) => {
-  try {
-    const { lat, lng } = req.query;
-    if (!lat || !lng) {
-      return res.status(400).send("Missing required parameters");
-    }
-    const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_API_KEY}`,
-      {
-        params: {
-          lat,
-          lng,
-        },
-      }
-    );
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).send("Error fetching data from Google Maps API");
-  }
-});
-
-
-
-
+import { cartRouter } from "./routes/user/cart.route.js";
+app.use("/api/v1/user/cart", cartRouter);
 
 socketHandlers(io, logger);

@@ -157,7 +157,7 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
 
     const store = await XeroxStore.findById(storeId)
       .select(
-        "-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner"
+        "-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner -storeSetUpProgress -storeImagesURL -isStoreSetupComplete -storeWalletBalance"
       )
       .populate({
         path: "storeReviews",
@@ -171,6 +171,10 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
       .populate({
         path: "storeTiming", // Populating the storeTiming field with StoreHours data
         select: "-createdAt -updatedAt -__v",
+      })
+      .populate({
+        path: "pricing",
+        select: "-createdAt -updatedAt -__v -storeId -_id",
       });
 
     if (!store) {

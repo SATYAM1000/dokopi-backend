@@ -13,28 +13,27 @@ const orderSchema = new mongoose.Schema(
     },
     cartItems: [
       {
-        id: { type: String, required: true },
-        fileURL: { type: String },
+        fileId: { type: String, required: true },
         fileKey: { type: String, required: true },
-        fileOriginalName: { type: String, required: true },
+        fileName: { type: String, required: true },
         fileSize: { type: String, required: true },
         fileExtension: { type: String, required: true },
-        filePageCount: { type: Number, required: true },
-        fileIconPath: { type: String, default: "/files-icon/other.svg" },
-        fileCopiesCount: { type: Number, default: 1 },
-        messageForXeroxStore: { type: String },
-        additionalServices: { type: String },
-        filePaperType: {
+        pageCount: { type: Number, required: true },
+        iconPath: { type: String, default: "/files-icon/other.svg" },
+        copiesCount: { type: Number, default: 1 },
+        xeroxStoreMessage: { type: String },
+        paperSize: {
           type: String,
           enum: ["A4", "A3", "A2", "A1", "A0"],
           default: "A4",
         },
-        fileColorType: {
+        printType: {
           type: String,
           enum: ["black_and_white", "simple_color", "digital_color", "mixed"],
         },
-        filePrintMode: { type: String, enum: ["single_sided", "double_sided"] },
-        fileColorPagesToPrint: { type: [String] },
+        printSides: { type: String, enum: ["single_sided", "double_sided"] },
+        colorPages: { type: Array },
+        mixedPrintType: { type: String, enum: ["simple_color", "digital_color"] },
       },
     ],
     phonePeMerchantUserId: {
@@ -71,7 +70,7 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "success", "failed", "cancelled", "refunded"],
       default: "pending",
     },
-    isActive: {
+    isOrderActive: {
       type: Boolean,
       default: true,
     },
@@ -79,7 +78,7 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    isViewed: {
+    isOrderViewedByMerchant: {
       type: Boolean,
       default: false,
     },

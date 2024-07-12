@@ -8,6 +8,7 @@ import axios from "axios";
 import { io } from "../../app.js";
 import { XeroxStore } from "../../models/store.model.js";
 import { User } from "../../models/user.model.js";
+import { Cart } from "../../models/cart.model.js";
 
 const merchantId =
   process.env.NODE_ENV === "production"
@@ -27,8 +28,14 @@ const domain =
     : "http://localhost:4000";
 
 export const checkout = async (req, res) => {
-  const { name, amount, cartItems, merchantTransactionId, merchantUserId, platformFee } =
-    req.body;
+  const {
+    name,
+    amount,
+    cartItems,
+    merchantTransactionId,
+    merchantUserId,
+    platformFee,
+  } = req.body;
   const { userId, storeId } = req.query;
 
   if (!amount || amount < 1 || !cartItems || cartItems.length < 1) {
@@ -78,12 +85,6 @@ export const checkout = async (req, res) => {
       });
     }
 
-    const decryptedCartItems = decryptCartItems(cartItems);
-
-    if (!decryptedCartItems) {
-      throw new Error("Error while decrypting cart items");
-    }
-
     const orderNumber = await getNextSequenceValue("orderID");
 
     const formattedOrderNumber = `#Order_${orderNumber
@@ -93,7 +94,7 @@ export const checkout = async (req, res) => {
     const newOrder = new Order({
       userId,
       storeId,
-      cartItems: decryptedCartItems,
+      cartItems: cartItems,
       totalPrice: amount,
       platformFee,
       orderStatus: "pending",
@@ -208,7 +209,9 @@ export const checkPaymentStatus = async (req, res) => {
             { new: true }
           );
 
-          // io.emit("paymentSuccess", { storeId: order.storeId });
+          const cartItems = await Cart.findOne({ userId: order.userId });
+          await Cart.deleteOne({ userId: order.userId });
+
           const currentStore = await XeroxStore.findById(order.storeId);
           const merchant = await User.findById(currentStore.storeOwner);
 

@@ -2,7 +2,7 @@ import { User } from "../models/user.model.js";
 
 export const socketHandlers = (io, logger) => {
   io.on("connection", (socket) => {
-    logger.info("New client connected! ", socket.id);
+    logger.info("New client connected!", socket.id);
 
     socket.on("userConnect", async ({ userId }) => {
       try {
@@ -11,7 +11,6 @@ export const socketHandlers = (io, logger) => {
           { socketId: socket.id },
           { new: true }
         );
-        logger.info(`User ${userId} connected and socket ID ${socket.id} stored`);
       } catch (error) {
         logger.error("Error handling user connection:", error);
       }
@@ -19,11 +18,7 @@ export const socketHandlers = (io, logger) => {
 
     socket.on("disconnect", async () => {
       logger.info("Client disconnected!", socket.id);
-      await User.findOneAndUpdate(
-        { socketId: socket.id },
-        { socketId: "" }
-      );
+      await User.findOneAndUpdate({ socketId: socket.id }, { socketId: "" });
     });
   });
 };
-
