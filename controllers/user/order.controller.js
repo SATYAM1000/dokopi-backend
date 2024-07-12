@@ -4,7 +4,6 @@ import mongoose from "mongoose";
 export const checkUserActiveOrders = async (req, res) => {
   try {
     const userId = req.user.id;
-
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
@@ -12,7 +11,7 @@ export const checkUserActiveOrders = async (req, res) => {
 
     const activeOrders = await Order.find({
       userId: userId,
-      isActive: true,
+      isOrderActive: true,
       paymentStatus: "success",
     })
       .select("-__v -userId -storeId -phonePeMerchantUserId")
@@ -24,11 +23,12 @@ export const checkUserActiveOrders = async (req, res) => {
       return res.status(404).json({
         msg: "No active orders found!",
         success: false,
+
       });
     }
 
 
-    const totalOrders = await Order.countDocuments({ userId: userId, isActive: true, paymentStatus: "success" });
+    const totalOrders = await Order.countDocuments({ userId: userId, isOrderActive: true, paymentStatus: "success" });
     const totalPages = Math.ceil(totalOrders / limit);
 
     return res.status(200).json({
