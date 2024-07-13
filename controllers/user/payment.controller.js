@@ -206,13 +206,12 @@ export const checkPaymentStatus = async (req, res) => {
         if (response.data.success === true) {
           const order = await Order.findOneAndUpdate(
             { phonePeTransactionId: merchantTransactionId },
-            { paymentStatus: "success" },
             {
+              paymentStatus: "success",
               isOrderActive: true,
-            },
-            {
               orderStatus: "pending",
             },
+
             { new: true }
           );
 
