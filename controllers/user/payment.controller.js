@@ -97,8 +97,9 @@ export const checkout = async (req, res) => {
       cartItems: cartItems,
       totalPrice: amount,
       platformFee,
-      orderStatus: "pending",
+      orderStatus: "incomplete",
       paymentStatus: "pending",
+      isOrderActive: false,
       phonePeTransactionId: merchantTransactionId,
       phonePeMerchantUserId: merchantUserId,
       orderNumber: formattedOrderNumber,
@@ -206,6 +207,12 @@ export const checkPaymentStatus = async (req, res) => {
           const order = await Order.findOneAndUpdate(
             { phonePeTransactionId: merchantTransactionId },
             { paymentStatus: "success" },
+            {
+              isOrderActive: true,
+            },
+            {
+              orderStatus: "pending",
+            },
             { new: true }
           );
 

@@ -13,6 +13,7 @@ export const checkUserActiveOrders = async (req, res) => {
       userId: userId,
       isOrderActive: true,
       paymentStatus: "success",
+      orderStatus: { $in: ["rejected", "pending", "processing", "printed"] },
     })
       .select("-__v -userId -storeId -phonePeMerchantUserId")
       .sort({ createdAt: -1 })
@@ -23,12 +24,14 @@ export const checkUserActiveOrders = async (req, res) => {
       return res.status(404).json({
         msg: "No active orders found!",
         success: false,
-
       });
     }
 
-
-    const totalOrders = await Order.countDocuments({ userId: userId, isOrderActive: true, paymentStatus: "success" });
+    const totalOrders = await Order.countDocuments({
+      userId: userId,
+      isOrderActive: true,
+      paymentStatus: "success",
+    });
     const totalPages = Math.ceil(totalOrders / limit);
 
     return res.status(200).json({
@@ -58,7 +61,12 @@ export const fetchUserOrdersHistory = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    const orders = await Order.find({ userId: userId })
+    const orders = await Order.find({
+      userId: userId,
+      isOrderActive: false,
+      paymentStatus: { $in: ["success", "failed", "cancelled", "refunded"] },
+      orderStatus: { $in: ["delivered", "rejected"] },
+    })
       .select("-__v -userId -storeId -phonePeMerchantUserId")
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -71,7 +79,12 @@ export const fetchUserOrdersHistory = async (req, res) => {
       });
     }
 
-    const totalOrders = await Order.countDocuments({ userId: userId });
+    const totalOrders = await Order.countDocuments({
+      userId: userId,
+      isOrderActive: false,
+      paymentStatus: { $in: ["success", "refunded"] },
+      orderStatus: { $in: ["delivered", "rejected"] },
+    });
     const totalPages = Math.ceil(totalOrders / limit);
 
     return res.status(200).json({

@@ -33,7 +33,10 @@ const orderSchema = new mongoose.Schema(
         },
         printSides: { type: String, enum: ["single_sided", "double_sided"] },
         colorPages: { type: Array },
-        mixedPrintType: { type: String, enum: ["simple_color", "digital_color"] },
+        mixedPrintType: {
+          type: String,
+          enum: ["simple_color", "digital_color"],
+        },
       },
     ],
     phonePeMerchantUserId: {
@@ -55,24 +58,17 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: [
-        "pending",
-        "processing",
-        "rejected",
-        "delivered",
-        "cancelled",
-        "completed",
-      ],
-      default: "pending",
+      enum: ["incomplete","pending", "processing", "printed", "delivered", "rejected"],
+      default: "incomplete",
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "success", "failed", "cancelled", "refunded"],
+      enum: ["pending", "success", "failed", "refunded"],
       default: "pending",
     },
     isOrderActive: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     orderNumber: {
       type: String,
