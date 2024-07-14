@@ -13,7 +13,7 @@ const orderSchema = new mongoose.Schema(
     },
     cartItems: [
       {
-        fileId: { type: String, required: true },
+        fileId: { type: String, required: true, unique: true },
         fileKey: { type: String, required: true },
         fileName: { type: String, required: true },
         fileSize: { type: String, required: true },
@@ -58,7 +58,14 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ["incomplete","pending", "processing", "printed", "delivered", "rejected"],
+      enum: [
+        "incomplete",
+        "pending",
+        "processing",
+        "printed",
+        "delivered",
+        "rejected",
+      ],
       default: "incomplete",
     },
     paymentStatus: {

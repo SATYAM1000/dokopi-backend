@@ -1,6 +1,7 @@
 import { Cart } from "../../models/cart.model.js";
 import { logger } from "../../config/logger.config.js";
 import Joi from "joi";
+import mongoose from "mongoose";
 
 const cartItemSchema = Joi.object({
   fileId: Joi.string().required(),
@@ -108,7 +109,6 @@ export const getCart = async (req, res) => {
   }
 };
 
-
 export const clearCart = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -178,7 +178,7 @@ const updateCartItemSchema = Joi.object({
   fileName: Joi.string().required(),
   fileSize: Joi.string().required(),
   fileExtension: Joi.string().required(),
-  filePageCount: Joi.number().required(),
+  pageCount: Joi.number().required(),
   iconPath: Joi.string().default("/files-icon/other.svg"),
   copiesCount: Joi.number().default(1),
   xeroxStoreMessage: Joi.string().allow(null, ""),
@@ -198,7 +198,8 @@ const updateCartItemSchema = Joi.object({
 
 export const updateCartItem = async (req, res) => {
   const userId = req.user.id;
-  const { itemId } = req.params;
+  const { fileId } = req.params;
+
   const updatedCartItem = req.body;
 
   const { error } = updateCartItemSchema.validate(updatedCartItem);
@@ -207,10 +208,6 @@ export const updateCartItem = async (req, res) => {
     return res
       .status(400)
       .json({ success: false, message: error.details[0].message });
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(itemId)) {
-    return res.status(400).json({ success: false, message: "Invalid item ID" });
   }
 
   try {
@@ -223,7 +220,7 @@ export const updateCartItem = async (req, res) => {
     }
 
     const itemIndex = cart.cartItems.findIndex(
-      (item) => item._id.toString() === itemId
+      (item) => item.fileId === fileId
     );
 
     if (itemIndex === -1) {
