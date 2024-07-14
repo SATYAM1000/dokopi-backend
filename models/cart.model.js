@@ -52,7 +52,7 @@ const cartSchema = new mongoose.Schema(
         },
         printType: {
           type: String,
-          enum: ["black_and_white", "simple_color", "digital_color"],
+          enum: ["black_and_white", "simple_color", "digital_color", "mixed"],
           default: "black_and_white",
         },
         printSides: {

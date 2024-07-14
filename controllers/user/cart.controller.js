@@ -15,12 +15,12 @@ const cartItemSchema = Joi.object({
   xeroxStoreMessage: Joi.string().allow(""),
   paperSize: Joi.string().valid("A4", "A3", "A2", "A1", "A0").default("A4"),
   printType: Joi.string()
-    .valid("black_and_white", "simple_color", "digital_color")
+    .valid("black_and_white", "simple_color", "digital_color", "mixed")
     .default("black_and_white"),
   printSides: Joi.string()
     .valid("single_sided", "double_sided")
     .default("single_sided"),
-  colorPages: Joi.array().items(Joi.string()).default([]),
+  colorPages: Joi.array().items(Joi.number()).default([]),
   mixedPrintType: Joi.string()
     .valid(null, "simple_color", "digital_color")
     .default("simple_color")
@@ -184,12 +184,12 @@ const updateCartItemSchema = Joi.object({
   xeroxStoreMessage: Joi.string().allow(null, ""),
   paperSize: Joi.string().valid("A4", "A3", "A2", "A1", "A0").default("A4"),
   printType: Joi.string()
-    .valid("black_and_white", "simple_color", "digital_color")
+    .valid("black_and_white", "simple_color", "digital_color", "mixed")
     .default("black_and_white"),
   printSides: Joi.string()
     .valid("single_sided", "double_sided")
     .default("single_sided"),
-  colorPages: Joi.array().items(Joi.string()).default([]),
+  colorPages: Joi.array().items(Joi.number()).default([]),
   mixedPrintType: Joi.string()
     .valid("simple_color", "digital_color")
     .allow(null)
