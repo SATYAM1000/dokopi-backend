@@ -31,6 +31,7 @@ export const checkUserActiveOrders = async (req, res) => {
       userId: userId,
       isOrderActive: true,
       paymentStatus: "success",
+      orderStatus: { $in: ["rejected", "pending", "processing", "printed"] },
     });
     const totalPages = Math.ceil(totalOrders / limit);
 
