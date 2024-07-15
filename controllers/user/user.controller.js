@@ -23,8 +23,10 @@ export const submitUserPhoneNumber = async (req, res) => {
 
     const existingUser = await User.findOne({ phone: phoneNumber });
     if (existingUser) {
+      const [localPart, domain] = existingUser.email.split("@");
+      const maskedEmail = `${localPart.slice(0, 6)}xxxxxx@${domain}`;
       return res.status(400).json({
-        msg: "Phone number already exists!",
+        msg: `Phone assigned to ${maskedEmail}!`,
         success: false,
       });
     }

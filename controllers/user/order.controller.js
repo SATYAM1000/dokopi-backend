@@ -36,7 +36,7 @@ export const checkUserActiveOrders = async (req, res) => {
     const totalPages = Math.ceil(totalOrders / limit);
 
     return res.status(200).json({
-      msg: "Orders history fetched successfully!",
+      msg: "Active orders fetched successfully!",
       success: true,
       data: activeOrders,
       currentPage: page,
