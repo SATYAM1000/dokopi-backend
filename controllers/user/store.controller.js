@@ -155,28 +155,82 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
 
     const pageSize = 4;
 
-    const store = await XeroxStore.findById(storeId)
-      .select(
-        "-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner -storeSetUpProgress -storeImagesURL -isStoreSetupComplete -storeWalletBalance"
-      )
-      .populate({
-        path: "storeReviews",
-        populate: {
-          path: "userId",
-        },
-        options: {
-          sort: { createdAt: -1 },
-        },
-      })
-      .populate({
-        path: "storeTiming", // Populating the storeTiming field with StoreHours data
-        select: "-createdAt -updatedAt -__v",
-      })
-      .populate({
-        path: "pricing",
-        select: "-createdAt -updatedAt -__v -storeId -_id",
-      });
+    const store = await XeroxStore.findById(storeId).select(
+      "-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner -storeSetUpProgress -storeImagesURL -isStoreSetupComplete -storeWalletBalance -pricing"
+    ).populate({
+      path: "storeReviews",
+      populate: {
+        path: "userId",
+      },
+      options: {
+        sort: { createdAt: -1 },
+      },
+    }).populate({
+      path: "storeTiming", // Populating the storeTiming field with StoreHours data
+      select: "-createdAt -updatedAt -__v",
+    })
+    const PriceList = await XeroxStore.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(storeId)
+        }
+      },
+      {
+        $lookup: {
+          from: "xeroxstorepricings",
+          localField: "pricing",
+          foreignField: "_id",
+          as: "storePriceList"
+        }
+      },
+      {
+        $unwind: {
+          path: "$storePriceList"
+        }
+      },
+      {
+        $unwind: {
+          path: "$storePriceList.priceList"
+        }
+      },
+      {
+        $addFields: {
+          prices: "$storePriceList.priceList"
+        }
+      },
+      {
+        $group: {
+          _id: "$prices.paperSize",
+          PriceList: {
+            $push: {
+              printType: "$prices.printType",
+              printingSides: "$prices.printingSides",
+              basePrice: "$prices.basePrice",
+              paperSize: "$prices.paperSize",
+              conditionsList: "$prices.conditionsList",
 
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          PaperSize: {
+            $first: "$PriceList.paperSize"
+          }
+        }
+      },
+      {
+        $sort: {
+          _id: -1
+        }
+      },
+      {
+        $project: {
+          _id: 0
+        }
+      }
+    ])
     if (!store) {
       return res.status(404).json({
         msg: "Store not found!",
@@ -207,6 +261,7 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
       success: true,
       msg: "Store details fetched successfully!",
       data: store,
+      prices: PriceList,
       pagination: {
         hasMoreReviews: hasMoreReviews,
         totalReviewsCount: totalReviewsCount,
