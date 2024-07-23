@@ -38,6 +38,7 @@ export const getXeroxStoreOrdersById = async (req, res) => {
       storeId: storeId,
       paymentStatus: "success",
     };
+    
 
     if (date) {
       const selectedDate = new Date(date);
@@ -122,7 +123,7 @@ export const isOrderViewed = async (req, res) => {
     }
 
     if (!order.isViewed) {
-      order.isViewed = true;
+      order.isOrderViewedByMerchant = true;
       order.orderStatus = "processing";
       await order.save();
 

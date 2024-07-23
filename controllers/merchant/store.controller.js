@@ -1,6 +1,5 @@
 import { XeroxStore } from "../../models/store.model.js";
 import { logger } from "../../config/logger.config.js";
-import { validateFields } from "../../utils/validate-fields.js";
 import mongoose from "mongoose";
 import { uploadXeroxStoreImagesToS3 } from "../../utils/store-images-upload.js";
 import fs from "fs";
@@ -9,87 +8,6 @@ import { BankDetails } from "../../models/bank-details.model.js";
 import supportModel from "../../models/support.model.js";
 import { StoreHours } from "../../models/store-hours.model.js";
 
-export const createNewXeroxStore = async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    const requiredFields = [
-      "storeName",
-      "storePhoneNumber",
-      "storeEmail",
-      "storeLocation",
-      "storeLogoURL",
-      "storeOpeningHours",
-      "storeServices",
-      "storeDescription",
-      "storeImagesURL",
-      "storePrices",
-    ];
-    const isValid = validateFields(req.body, requiredFields);
-    if (!isValid) {
-      return res.status(400).json({
-        msg: "All fields are required!",
-        success: false,
-      });
-    }
-
-    const isUserAlreadyOwnerOfStore = await XeroxStore.findOne({
-      storeOwner: userId,
-    });
-    if (isUserAlreadyOwnerOfStore) {
-      return res.status(400).json({
-        msg: "User already owns a store!",
-        success: false,
-      });
-    }
-
-    const {
-      storeName,
-      storePhoneNumber,
-      storeEmail,
-      storeLocation,
-      storeLocationCoordinates,
-      storeLogoURL,
-      storeOpeningHours,
-      storeServices,
-      storeDescription,
-      storeImagesURL,
-      storePrices,
-    } = req.body;
-
-    const newStore = new XeroxStore({
-      storeDetails: {
-        storeName,
-        storePhoneNumber,
-        storeEmail,
-        storeLocation,
-        storeLogoURL,
-        storeOpeningHours,
-        storeServices,
-        storeDescription,
-      },
-      storeLocationCoordinates,
-      storeImagesURL,
-      storePrices,
-      storeOwner: userId,
-    });
-
-    await newStore.save();
-
-    return res.status(201).json({
-      msg: "Store created successfully!",
-      success: true,
-      newStoreId: newStore._id,
-    });
-  } catch (error) {
-    logger.error(`Error while creating new store: ${error.message}`);
-    return res.status(500).json({
-      msg: "Internal server error!",
-      error: error.message,
-      success: false,
-    });
-  }
-};
 
 export const getStartedForm = async (req, res) => {
   try {
@@ -119,10 +37,11 @@ export const getStartedForm = async (req, res) => {
     if (existingStore) {
       let errorMsg = "";
       if (existingStore.storeDetails.storeEmail === storeEmail) {
-        errorMsg = "A store with this email account already exists";
+        errorMsg = "Email already in use";
       } else if (existingStore.storeDetails.storePhoneNumber === phoneNumber) {
-        errorMsg = "A store with this phone number already exists";
+        errorMsg = "Phone number already in use";
       }
+
       return res.status(400).json({
         msg: errorMsg || "Store already exists!",
         success: false,
@@ -148,58 +67,6 @@ export const getStartedForm = async (req, res) => {
     logger.error(`Error while setting get started form: ${error.message}`);
     return res.status(500).json({
       msg: "Something went wrong!",
-      error: error.message,
-      success: false,
-    });
-  }
-};
-
-export const changeStoreStatus = async (req, res) => {
-  try {
-    const storeId = req.params.storeId;
-    const state = req.params.state;
-
-    if (state !== "open" && state !== "closed") {
-      return res.status(400).json({
-        msg: "Invalid store status!",
-        success: false,
-      });
-    }
-    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
-      return res.status(400).json({
-        msg: "Invalid store id!",
-        success: false,
-      });
-    }
-
-    const store = await XeroxStore.findById(storeId);
-
-    store.storeCurrentStatus = state;
-    if (state === "open") {
-      store.storeOpenedAt = new Date();
-      store.isStoreOpen = true;
-      await store.save();
-      return res.status(200).json({
-        msg: "Store opened successfully",
-        success: true,
-        storeStatus: store.storeStatus,
-        state: store.storeCurrentStatus,
-      });
-    } else {
-      store.storeOpenedAt = null;
-      store.isStoreOpen = false;
-      await store.save();
-      return res.status(200).json({
-        msg: "Store closed successfully",
-        success: true,
-        storeStatus: store.storeStatus,
-        state: store.storeCurrentStatus,
-      });
-    }
-  } catch (error) {
-    logger.error(`Error while changing store status: ${error.message}`);
-    return res.status(500).json({
-      msg: "Internal server error!",
       error: error.message,
       success: false,
     });
@@ -343,7 +210,6 @@ export const getStoreBasicDetails = async (req, res) => {
 
 export const updateStoreBasicDetails = async (req, res) => {
   try {
-    console.log("req.user is ", req.user._id);
     const storeId = req.params.storeId;
     if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
@@ -799,7 +665,6 @@ export const ConfigurStorePrice = async (req, res) => {
   try {
     const PriceListRecvdFromUser = req.body.storePriceData;
     const storeId = PriceListRecvdFromUser.storeId;
-    
 
     if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({

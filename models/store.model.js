@@ -8,7 +8,7 @@ const xeroxStoreSchema = new mongoose.Schema(
         type: String,
         unique: [true, "Store reference ID already exists"],
         trim: true,
-        default: () => `store-${crypto.randomBytes(4).toString("hex")}`,
+        default: () => `dokopi-${crypto.randomBytes(4).toString("hex")}`,
       },
       storeName: {
         type: String,
@@ -34,8 +34,6 @@ const xeroxStoreSchema = new mongoose.Schema(
         storeState: { type: String, trim: true },
         storeCountry: { type: String, trim: true },
       },
-      storeServices: [{ type: String }],
-      storeDescription: { type: String, trim: true },
     },
     storeLocationCoordinates: {
       type: { type: String, enum: ["Point"], default: "Point" },
@@ -44,23 +42,11 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeTiming: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "StoreHours",
-      
     },
     storeStatus: {
       isStoreVerified: { type: Boolean, default: false },
       isStoreBlocked: { type: Boolean, default: false },
     },
-    storeCurrentStatus: {
-      type: String,
-      enum: ["open", "closed"],
-      default: "closed",
-    },
-    storeImagesURL: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
     pricing: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "xeroxstorepricing",
@@ -74,15 +60,10 @@ const xeroxStoreSchema = new mongoose.Schema(
     storeReviews: [
       { type: mongoose.Schema.Types.ObjectId, ref: "StoreReview" },
     ],
-    storeWalletBalance: {
-      type: Number,
-      default: 0,
-    },
+
     storeAdmins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     storeProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     storeCoupons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Coupon" }],
-    isStoreOpen: { type: Boolean, default: true },
-    storeOpenedAt: { type: Date, default: Date.now },
     storeSetUpProgress: {
       step1: { type: Boolean, default: false }, //  Profile information
       step2: { type: Boolean, default: false }, // images upload
