@@ -38,7 +38,6 @@ export const getXeroxStoreOrdersById = async (req, res) => {
       storeId: storeId,
       paymentStatus: "success",
     };
-    
 
     if (date) {
       const selectedDate = new Date(date);
@@ -101,7 +100,6 @@ export const getXeroxStoreOrdersById = async (req, res) => {
   }
 };
 
-
 export const isOrderViewed = async (req, res) => {
   try {
     const orderId = req.params.orderId;
@@ -139,6 +137,113 @@ export const isOrderViewed = async (req, res) => {
     });
   } catch (error) {
     logger.error(`Error while setting order viewed: ${error.message}`);
+    return res.status(500).json({
+      msg: "Something went wrong",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const cancelOrder = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+
+    if (!orderId) {
+      return res.status(400).json({
+        msg: "Order ID is required",
+        success: false,
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        msg: "Invalid order ID",
+        success: false,
+      });
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        msg: "Order not found",
+        success: false,
+      });
+    }
+
+    if (order.orderStatus === "rejected" || order.orderStatus === "delivered") {
+      return res.status(400).json({
+        msg: `Cannot cancel an order that is already ${order.orderStatus}`,
+        success: false,
+      });
+    }
+
+    order.orderStatus = "rejected";
+    await order.save();
+
+    return res.status(200).json({
+      msg: "Order successfully canceled",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while canceling order: ${error.message}`);
+    return res.status(500).json({
+      msg: "Something went wrong",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const toggleOrderStatus = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    if (!orderId) {
+      return res.status(400).json({
+        msg: "Order ID is required",
+        success: false,
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        msg: "Invalid order ID",
+        success: false,
+      });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        msg: "Order not found",
+        success: false,
+      });
+    }
+
+    // Toggle the order status
+    switch (order.orderStatus) {
+      case "printed":
+        order.orderStatus = "processing";
+        break;
+      case "processing":
+        order.orderStatus = "printed";
+        break;
+      default:
+        return res.status(400).json({
+          msg: `Cannot toggle order status from ${order.orderStatus}.`,
+          success: false,
+        });
+    }
+
+    await order.save();
+
+    return res.status(200).json({
+      msg: `Order marked as ${order.orderStatus}`,
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while toggling order status: ${error.message}`);
     return res.status(500).json({
       msg: "Something went wrong",
       error: error.message,
