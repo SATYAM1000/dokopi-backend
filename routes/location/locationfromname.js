@@ -13,7 +13,7 @@ locationRouter.get('/location', async (req, res) => {
             })
         }
         const { data } =
-            await axios.get(`https://us1.locationiq.com/v1/search?key=${process.env.LOCATION_FROM_NAME_TO_COORDINATES}&q=${SeachLocation}&format=json`)
+            await axios.get(`https://api.locationiq.com/v1/search?key=${process.env.LOCATION_FROM_NAME_TO_COORDINATES}&q=${SeachLocation}&countrycodes=IN&format=json`)
 
         return res.json({ result: data, success: true })
     } catch (error) {
