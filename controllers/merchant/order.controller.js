@@ -314,17 +314,23 @@ export const changeOrderStatus = async (req, res) => {
 
 export const getTotalOrderDetails = async (req, res) => {
   try {
-    const storeId = req.params.storeId;
+    const { storeId } = req.params;
+
     if (!mongoose.Types.ObjectId.isValid(storeId)) {
       return res.status(400).json({
         msg: "Invalid store ID!",
         success: false,
       });
     }
+
     const data = await Order.aggregate([
       {
         $match: {
-          storeId: new mongoose.Types.ObjectId("665d78f3aa4504eb4abeb726"),
+          storeId: new mongoose.Types.ObjectId(storeId),
+          orderStatus: {
+            $in: ["pending", "processing", "printed", "delivered", "rejected"],
+          },
+          paymentStatus: "success",
         },
       },
       {
@@ -344,13 +350,9 @@ export const getTotalOrderDetails = async (req, res) => {
           amount: "$totalPrice",
           FilesRecvd: {
             $cond: {
-              if: {
-                $isArray: "$cartItems",
-              },
-              then: {
-                $size: "$cartItems",
-              },
-              else: "0",
+              if: { $isArray: "$cartItems" },
+              then: { $size: "$cartItems" },
+              else: 0,
             },
           },
           Status: "$orderStatus",
@@ -388,7 +390,8 @@ export const getTotalOrderDetails = async (req, res) => {
     });
   } catch (error) {
     console.error(
-      `Error while fetching dashboard Total Orders: ${error.message}`
+      `Error while fetching dashboard Total Orders: ${error.message}`,
+      error
     );
     return res.status(500).json({
       msg: "Something went wrong!",
