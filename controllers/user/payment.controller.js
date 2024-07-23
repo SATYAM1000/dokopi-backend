@@ -78,13 +78,6 @@ export const checkout = async (req, res) => {
       });
     }
 
-    if (storeInfo.storeCurrentStatus !== "open") {
-      return res.status(400).json({
-        success: false,
-        msg: "Store is not open",
-      });
-    }
-
     const orderNumber = await getNextSequenceValue("orderID");
 
     const formattedOrderNumber = `#Order_${orderNumber
