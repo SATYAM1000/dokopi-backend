@@ -187,6 +187,7 @@ export const cancelOrder = async (req, res) => {
     }
 
     order.orderStatus = "rejected";
+    order.isOrderActive = false;
     await order.save();
 
     return res.status(200).json({
@@ -305,7 +306,13 @@ export const changeOrderStatus = async (req, res) => {
       });
     }
 
-    order.orderStatus = status;
+    if (status === "delivered") {
+      order.orderStatus = "delivered";
+      order.isOrderActive = false;
+    } else {
+      order.orderStatus = status;
+    }
+
     await order.save();
     return res.status(200).json({
       msg: "Order status changed successfully",
