@@ -280,14 +280,9 @@ export const changeOrderStatus = async (req, res) => {
 
     if (
       !status ||
-      ![
-        "pending",
-        "processing",
-        "rejected",
-        "delivered",
-        "cancelled",
-        "completed",
-      ].includes(status)
+      !["pending", "processing", "rejected", "delivered", "printed"].includes(
+        status
+      )
     ) {
       return res.status(400).json({
         msg: "Status is required",
@@ -299,6 +294,13 @@ export const changeOrderStatus = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         msg: "Order not found",
+        success: false,
+      });
+    }
+
+    if (order.orderStatus === "rejected") {
+      return res.status(400).json({
+        msg: "Can not change status of rejected order",
         success: false,
       });
     }
