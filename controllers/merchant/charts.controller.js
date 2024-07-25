@@ -86,7 +86,7 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
       return (
         acc +
         order.cartItems.reduce((itemAcc, item) => {
-          return itemAcc + item.filePageCount * item.fileCopiesCount;
+          return itemAcc + item.pageCount * item.copiesCount;
         }, 0)
       );
     }, 0);
@@ -99,9 +99,10 @@ export const getAnalyticsDataForTimeRange = async (req, res) => {
     const previousTotalOrders = previousOrders.length;
     const previousTotalPagesPrinted = previousOrders.reduce((acc, order) => {
       return (
+
         acc +
         order.cartItems.reduce((itemAcc, item) => {
-          return itemAcc + item.filePageCount * item.fileCopiesCount;
+          return itemAcc + item.pageCount * item.copiesCount;
         }, 0)
       );
     }, 0);
