@@ -26,9 +26,16 @@ export const getXeroxStoreOrdersById = async (req, res) => {
     }
 
     if (!store.isStoreSetupComplete) {
+      let incompleteStep = 0;
+      if (store.storeSetUpProgress.step1 === false) incompleteStep = 1;
+      else if (store.storeSetUpProgress.step2 === false) incompleteStep = 2;
+      else if (store.storeSetUpProgress.step3 === false) incompleteStep = 3;
+      else if (store.storeSetUpProgress.step4 === false) incompleteStep = 4;
+      else incompleteStep = null;
+
       return res.status(400).json({
         code: "SETUP_INCOMPLETE",
-        storeSetUpProgress: store.storeSetUpProgress,
+        inCompleteStep: incompleteStep,
         msg: "Store setup is not completed. Please complete the store setup.",
         success: false,
       });
