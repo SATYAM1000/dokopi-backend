@@ -191,3 +191,72 @@ export const getXeroxStorePricing = async (req, res) => {
     });
   }
 };
+
+export const deleteXeroxStorePricingCondition = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    const conditionId = req.params.conditionId;
+
+    // Validate storeId and conditionId
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    if (!conditionId || !mongoose.Types.ObjectId.isValid(conditionId)) {
+      return res.status(400).json({
+        msg: "Invalid condition id!",
+        success: false,
+      });
+    }
+
+    // Find the store pricing by storeId
+    const storePricing = await xeroxstorepricing.findOne({ storeId });
+    if (!storePricing) {
+      return res.status(404).json({
+        code: "STORE_PRICING_NOT_FOUND",
+        msg: "Store pricing not found!",
+        success: false,
+      });
+    }
+
+    // Iterate through the priceList to find the condition
+    let conditionFound = false;
+    storePricing.priceList.forEach((config) => {
+      const conditionIndex = config.conditionsList.findIndex(
+        (condition) => condition._id.toString() === conditionId
+      );
+
+      if (conditionIndex !== -1) {
+        config.conditionsList.splice(conditionIndex, 1);
+        conditionFound = true;
+      }
+    });
+
+    if (!conditionFound) {
+      return res.status(404).json({
+        code: "CONDITION_NOT_FOUND",
+        msg: "Condition not found!",
+        success: false,
+      });
+    }
+
+    // Save the updated store pricing
+    await storePricing.save();
+
+    return res.status(200).json({
+      msg: "Condition deleted successfully!",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while deleting xerox store pricing condition: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
