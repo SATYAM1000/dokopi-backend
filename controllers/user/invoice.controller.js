@@ -40,7 +40,8 @@ export const generateInvoiceByOrderId = async (req, res) => {
       `${Date.now()}-${sanitizedOrderNumber}.pdf`
     );
 
-    const userInfo = await User.findById(order.userId);
+    const userInfo = await User.findById(order.userId).select("name phone");
+
     if (!userInfo) {
       return res.status(404).json({
         msg: "User not found!",
@@ -48,7 +49,9 @@ export const generateInvoiceByOrderId = async (req, res) => {
       });
     }
 
-    const storeInfo = await XeroxStore.findById(order.storeId);
+    const storeInfo = await XeroxStore.findById(order.storeId).select(
+      "storeDetails.storeName storeDetails.storePhoneNumber storeDetails.storeEmail storeDetails.storeLocation -_id"
+    );
     if (!storeInfo) {
       return res.status(404).json({
         msg: "Store not found!",
@@ -93,16 +96,17 @@ async function deleteInvoiceFile(filePath) {
 }
 
 function generateInvoiceData(order, userInfo, storeInfo) {
+
   const userSelectedItems = order.cartItems.map((item) => {
     return {
-      name: item.fileOriginalName,
-      no_of_copies: item.fileCopiesCount,
-      type: item.fileColorType,
-      print_mode: item.filePrintMode,
-      total_pages: item.filePageCount,
+      name: item.fileName,
+      no_of_copies: item.copiesCount,
+      type: item.printType,
+      print_mode: item.printSides,
+      total_pages: item.pageCount,
       color_pages_to_print:
-        item.fileColorPagesToPrint.length > 0
-          ? item.fileColorPagesToPrint.sort((a, b) => a - b).join(", ")
+        item.colorPages.length > 0
+          ? item.colorPages.sort((a, b) => a - b).join(", ")
           : "NA",
     };
   });
@@ -110,7 +114,7 @@ function generateInvoiceData(order, userInfo, storeInfo) {
   return {
     shipping: {
       name: userInfo.name,
-      email: userInfo.email,
+      email: userInfo.phone,
     },
     items: userSelectedItems,
     subtotal: order.totalPrice,

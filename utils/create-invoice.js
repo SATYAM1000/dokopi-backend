@@ -45,6 +45,7 @@ function generateHeader(doc) {
     .text("Dokopi.", 200, 50, { align: "right" })
     .text("Vadgaon Budruk", 200, 65, { align: "right" })
     .text("Pune, Maharastra, 411041", 200, 80, { align: "right" })
+    .text('Tel: +91 8789373766', 110, 105)
     .moveDown();
 }
 
