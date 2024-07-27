@@ -222,17 +222,20 @@ export const deleteXeroxStorePricingCondition = async (req, res) => {
       });
     }
 
-    // Iterate through the priceList to find the condition
+    // Iterate through the priceList to find the condition and potentially remove the element
     let conditionFound = false;
-    storePricing.priceList.forEach((config) => {
-      const conditionIndex = config.conditionsList.findIndex(
-        (condition) => condition._id.toString() === conditionId
+    storePricing.priceList = storePricing.priceList.filter((config) => {
+      const initialLength = config.conditionsList.length;
+      config.conditionsList = config.conditionsList.filter(
+        (condition) => condition._id.toString() !== conditionId
       );
 
-      if (conditionIndex !== -1) {
-        config.conditionsList.splice(conditionIndex, 1);
+      if (config.conditionsList.length < initialLength) {
         conditionFound = true;
       }
+
+      // If the conditionsList is empty after removal, do not include this config in the updated priceList
+      return config.conditionsList.length > 0;
     });
 
     if (!conditionFound) {
@@ -251,7 +254,9 @@ export const deleteXeroxStorePricingCondition = async (req, res) => {
       success: true,
     });
   } catch (error) {
-    logger.error(`Error while deleting xerox store pricing condition: ${error.message}`);
+    logger.error(
+      `Error while deleting xerox store pricing condition: ${error.message}`
+    );
     return res.status(500).json({
       msg: "Internal server error!",
       error: error.message,
@@ -259,4 +264,3 @@ export const deleteXeroxStorePricingCondition = async (req, res) => {
     });
   }
 };
-
