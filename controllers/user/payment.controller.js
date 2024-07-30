@@ -196,7 +196,7 @@ export const checkPaymentStatus = async (req, res) => {
     axios
       .request(options)
       .then(async (response) => {
-        if (response.data.success === true) {
+        if (response.data.success === true && response.data.data.state==='COMPLETED') {
           const order = await Order.findOneAndUpdate(
             { phonePeTransactionId: merchantTransactionId },
             {
