@@ -41,11 +41,13 @@ export const uploadToS3 = async (localFilePath) => {
   }
 
   const fileStream = fs.createReadStream(localFilePath);
+  const folderName = "users-uploaded-files";
+  const objectKey = `${folderName}/${path.basename(localFilePath)}`;
 
   const uploadParams = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Body: fileStream,
-    Key: path.basename(localFilePath),
+    Key: objectKey,
   };
 
   const uploadOptions = {
@@ -63,11 +65,6 @@ export const uploadToS3 = async (localFilePath) => {
 
     const data = await parallelUpload.done();
     fs.unlinkSync(localFilePath);
-
-    const presignedURL = await generatePresignedURL(
-      process.env.AWS_BUCKET_NAME,
-      path.basename(localFilePath)
-    );
 
     const objectKey = path.basename(localFilePath);
 

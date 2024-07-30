@@ -13,6 +13,7 @@ const S3client = new S3Client({
   },
 });
 
+
 export const uploadXeroxStoreImagesToS3 = async (localFilePath) => {
   if (!localFilePath) {
     throw new Error("File path is required");
