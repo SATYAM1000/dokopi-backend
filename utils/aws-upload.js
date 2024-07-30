@@ -66,8 +66,6 @@ export const uploadToS3 = async (localFilePath) => {
     const data = await parallelUpload.done();
     fs.unlinkSync(localFilePath);
 
-    const objectKey = path.basename(localFilePath);
-
     return objectKey;
   } catch (error) {
     fs.unlinkSync(localFilePath);
