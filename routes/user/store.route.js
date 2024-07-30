@@ -1,6 +1,11 @@
-import { fetchNearestStores, fetchSingleStoreDetailsById, searchStores } from "../../controllers/user/store.controller.js";
+import {
+  fetchNearestStores,
+  fetchSingleStoreDetailsById,
+  getAllStores,
+  getSingleStoreDetailForSEO,
+  searchStores,
+} from "../../controllers/user/store.controller.js";
 import { Router } from "express";
-
 
 const userStoreRouter = Router();
 
@@ -12,5 +17,11 @@ userStoreRouter.get("/get-store-info/:storeId", fetchSingleStoreDetailsById);
 
 // Endpoint to provide search results (PUBLIC ENDPOINT)
 userStoreRouter.get("/search", searchStores);
+
+// Endpoint to get all stores for seo purpose (PUBLIC ENDPOINT)
+userStoreRouter.get("/all", getAllStores);
+
+// Endpoint to get details for seo purpose (PUBLIC ENDPOINT)
+userStoreRouter.get("/:storeId", getSingleStoreDetailForSEO);
 
 export default userStoreRouter;

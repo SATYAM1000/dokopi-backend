@@ -155,48 +155,51 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
 
     const pageSize = 4;
 
-    const store = await XeroxStore.findById(storeId).select(
-      "-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner -storeSetUpProgress -storeImagesURL -isStoreSetupComplete -storeWalletBalance -pricing"
-    ).populate({
-      path: "storeReviews",
-      populate: {
-        path: "userId",
-      },
-      options: {
-        sort: { createdAt: -1 },
-      },
-    }).populate({
-      path: "storeTiming", // Populating the storeTiming field with StoreHours data
-      select: "-createdAt -updatedAt -__v",
-    })
+    const store = await XeroxStore.findById(storeId)
+      .select(
+        "-createdAt -updatedAt -__v  -storeAdmins -storeCoupons -storeCreatedDate -storeProducts -storeOwner -storeSetUpProgress -storeImagesURL -isStoreSetupComplete -storeWalletBalance -pricing"
+      )
+      .populate({
+        path: "storeReviews",
+        populate: {
+          path: "userId",
+        },
+        options: {
+          sort: { createdAt: -1 },
+        },
+      })
+      .populate({
+        path: "storeTiming", // Populating the storeTiming field with StoreHours data
+        select: "-createdAt -updatedAt -__v",
+      });
     const PriceList = await XeroxStore.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(storeId)
-        }
+          _id: new mongoose.Types.ObjectId(storeId),
+        },
       },
       {
         $lookup: {
           from: "xeroxstorepricings",
           localField: "pricing",
           foreignField: "_id",
-          as: "storePriceList"
-        }
+          as: "storePriceList",
+        },
       },
       {
         $unwind: {
-          path: "$storePriceList"
-        }
+          path: "$storePriceList",
+        },
       },
       {
         $unwind: {
-          path: "$storePriceList.priceList"
-        }
+          path: "$storePriceList.priceList",
+        },
       },
       {
         $addFields: {
-          prices: "$storePriceList.priceList"
-        }
+          prices: "$storePriceList.priceList",
+        },
       },
       {
         $group: {
@@ -208,29 +211,28 @@ export const fetchSingleStoreDetailsById = async (req, res) => {
               basePrice: "$prices.basePrice",
               paperSize: "$prices.paperSize",
               conditionsList: "$prices.conditionsList",
-
-            }
-          }
-        }
+            },
+          },
+        },
       },
       {
         $addFields: {
           PaperSize: {
-            $first: "$PriceList.paperSize"
-          }
-        }
+            $first: "$PriceList.paperSize",
+          },
+        },
       },
       {
         $sort: {
-          _id: -1
-        }
+          _id: -1,
+        },
       },
       {
         $project: {
-          _id: 0
-        }
-      }
-    ])
+          _id: 0,
+        },
+      },
+    ]);
     if (!store) {
       return res.status(404).json({
         msg: "Store not found!",
@@ -375,6 +377,67 @@ export const searchStores = async (req, res) => {
       msg: "Internal server error!",
       error: error.message,
       success: false,
+    });
+  }
+};
+
+export const getAllStores = async (req, res) => {
+  try {
+    const allStores = await XeroxStore.find({
+      "storeStatus.isStoreVerified": true,
+    }).select("_id createdAt updatedAt ");
+    return res.status(200).json({
+      msg: "All stores fetched successfully!",
+      success: true,
+      data: allStores,
+    });
+  } catch (error) {
+    logger.error(`Error while getting all stores: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const getSingleStoreDetailForSEO = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+        data: null,
+      });
+    }
+
+    const store = await XeroxStore.findOne({
+      _id: storeId,
+      "storeStatus.isStoreVerified": true,
+    }).select("storeDetails storeImagesKeys");
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      msg: "Store details fetched successfully!",
+      success: true,
+      data: store,
+    });
+  } catch (error) {
+    logger.error(
+      `Error while getting single store detail for SEO: ${error.message}`
+    );
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+      data: null,
     });
   }
 };
