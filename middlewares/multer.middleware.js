@@ -18,11 +18,9 @@ const storage = multer.diskStorage({
         ".pptx",
         ".jpeg",
       ];
-      if (
-        !allowedExtensions.includes(
-          path.extname(file.originalname).toLowerCase()
-        )
-      ) {
+      const fileExt = path.extname(file.originalname).toLowerCase(); // Convert extension to lowercase
+
+      if (!allowedExtensions.includes(fileExt)) {
         logger.error(
           "Invalid file type. Only PDF, DOCX, JPG, JPEG, PNG, PPTX allowed."
         );

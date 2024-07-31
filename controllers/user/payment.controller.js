@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import { logger } from "../../config/logger.config.js";
-import { decryptCartItems } from "../../utils/decrypt-cart-items.js";
 import { Order } from "../../models/order.model.js";
 import mongoose from "mongoose";
 import { getNextSequenceValue } from "../../utils/next-seq-generator.js";

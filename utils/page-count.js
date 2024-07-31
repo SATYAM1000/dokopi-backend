@@ -1,11 +1,11 @@
 import { readFileSync } from "fs";
-import {OdtCounter, PdfCounter, PptxCounter } from "page-count";
+import { OdtCounter, PdfCounter, PptxCounter } from "page-count";
 import { logger } from "../config/logger.config.js";
 import getDocxPageCount from "./docx-page-count.js";
 
 export const pageCounter = async (filePath, extension) => {
   try {
-    if (["docx", "pdf", "pptx", "odt"].includes(extension)) {
+    if (["docx", "pdf", "pptx", "odt", "Pdf"].includes(extension)) {
       const fileBuffer = readFileSync(filePath);
       let pageCount;
 
@@ -22,6 +22,9 @@ export const pageCounter = async (filePath, extension) => {
         case "pdf":
           pageCount = await PdfCounter.count(fileBuffer);
           break;
+        case "Pdf":
+          pageCount = await PdfCounter.count(fileBuffer);
+          break;
         case "pptx":
           pageCount = await PptxCounter.count(fileBuffer);
           break;
@@ -34,7 +37,7 @@ export const pageCounter = async (filePath, extension) => {
 
       return pageCount;
     } else if (["jpg", "jpeg", "png"].includes(extension)) {
-      return 1; // Assuming 1 page for image files
+      return 1;
     } else {
       logger.error(`Unsupported file extension: ${extension}`);
       throw new Error(`Unsupported file extension: ${extension}`);
