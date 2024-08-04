@@ -162,8 +162,8 @@ export const checkout = async (req, res) => {
 
 export const checkPaymentStatus = async (req, res) => {
   try {
-    const { id } = req.query;
-    const merchantTransactionId = id;
+    const { id: merchantTransactionId } = req.query;
+    
     if (!merchantTransactionId) {
       return res.status(400).json({
         success: false,
@@ -171,86 +171,86 @@ export const checkPaymentStatus = async (req, res) => {
       });
     }
 
-    const string =
-      `/pg/v1/status/${merchantId}/${merchantTransactionId}` + saltKey;
+    const string = `/pg/v1/status/${merchantId}/${merchantTransactionId}${saltKey}`;
     const sha256 = crypto.createHash("sha256").update(string).digest("hex");
-    const checksum = sha256 + "###" + keyIndex;
+    const checksum = `${sha256}###${keyIndex}`;
 
-    const URL =
-      process.env.NODE_ENV === "production"
-        ? "https://api.phonepe.com/apis/hermes/pg/v1"
-        : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1";
+    const baseURL = process.env.NODE_ENV === "production"
+      ? "https://api.phonepe.com/apis/hermes/pg/v1"
+      : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1";
 
     const options = {
       method: "GET",
-      url: `${URL}/status/${merchantId}/${merchantTransactionId}`,
+      url: `${baseURL}/status/${merchantId}/${merchantTransactionId}`,
       headers: {
         accept: "application/json",
         "Content-Type": "application/json",
         "X-VERIFY": checksum,
-        "X-MERCHANT-ID": `${merchantId}`,
+        "X-MERCHANT-ID": merchantId,
       },
     };
 
-    axios
-      .request(options)
-      .then(async (response) => {
-        if (
-          response.data.success === true &&
-          response.data.data.state === "COMPLETED"
-        ) {
-          const order = await Order.findOneAndUpdate(
-            { phonePeTransactionId: merchantTransactionId },
-            {
-              paymentStatus: "success",
-              isOrderActive: true,
-              orderStatus: "pending",
-            },
+    const response = await axios.request(options);
+    console.log("response is ", response.data);
 
-            { new: true }
-          );
+    if (response.data.success && response.data.data.state === 'COMPLETED') {
+      const order = await Order.findOneAndUpdate(
+        { phonePeTransactionId: merchantTransactionId },
+        {
+          paymentStatus: "success",
+          isOrderActive: true,
+          orderStatus: "pending",
+        },
+        { new: true }
+      );
 
-          const cartItems = await Cart.findOne({ userId: order.userId });
-          await Cart.deleteOne({ userId: order.userId });
+      const cartItems = await Cart.findOne({ userId: order.userId });
+      await Cart.deleteOne({ userId: order.userId });
 
-          const currentStore = await XeroxStore.findById(order.storeId);
-          const merchant = await User.findById(currentStore.storeOwner);
+      const currentStore = await XeroxStore.findById(order.storeId);
+      const merchant = await User.findById(currentStore.storeOwner);
 
-          if (merchant && merchant.socketId) {
-            io.to(merchant.socketId).emit("paymentSuccess", {
-              storeId: order.storeId,
-            });
-          }
-          const url =
-            process.env.NODE_ENV === "production"
-              ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
-              : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
-          return res.redirect(url);
-        } else {
-          const order = await Order.findOneAndUpdate(
-            { phonePeTransactionId: merchantTransactionId },
-            { paymentStatus: "failed" },
-            { new: true }
-          );
-          const url =
-            process.env.NODE_ENV === "production"
-              ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
-              : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
-          return res.redirect(url);
-        }
-      })
-      .catch((error) => {
-        logger.error("Error while checking phonepe payment status: ", error);
-        res.status(500).json({
-          success: false,
-          msg: error.message,
+      if (merchant && merchant.socketId) {
+        io.to(merchant.socketId).emit("paymentSuccess", {
+          storeId: order.storeId,
         });
-      });
+      }
+
+      const redirectUrl = process.env.NODE_ENV === "production"
+        ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
+        : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
+      
+      return res.redirect(redirectUrl);
+    } else {
+      await Order.findOneAndUpdate(
+        { phonePeTransactionId: merchantTransactionId },
+        { paymentStatus: "failed" },
+        { new: true }
+      );
+
+      const redirectUrl = process.env.NODE_ENV === "production"
+        ? `https://dokopi.com/payment/failure?id=${merchantTransactionId}`
+        : `http://localhost:3000/payment/failure?id=${merchantTransactionId}`;
+      
+      return res.redirect(redirectUrl);
+    }
   } catch (error) {
     logger.error("Error while checking phonepe payment status: ", error);
-    res.status(500).json({
+    
+    // Update the order status to failed if there's an error
+    try {
+      await Order.findOneAndUpdate(
+        { phonePeTransactionId: req.query.id },
+        { paymentStatus: "failed" },
+        { new: true }
+      );
+    } catch (updateError) {
+      logger.error("Error while updating order status to failed: ", updateError);
+    }
+
+    return res.status(500).json({
       success: false,
-      msg: error.message,
+      msg: "Internal Server Error",
     });
   }
 };

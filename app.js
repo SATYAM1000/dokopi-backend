@@ -6,6 +6,8 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import ExpressMongoSanitize from "express-mongo-sanitize";
+import compression from "compression"
+
 import hpp from "hpp";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -43,6 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
 app.use(hpp());
 app.use(ExpressMongoSanitize());
+app.use(compression());
 
 connectDB(process.env.DATABASE_URL)
   .then(() => {
