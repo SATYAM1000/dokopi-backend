@@ -28,7 +28,8 @@ export const uploadFileToS3 = async (req, res) => {
         success: false,
       });
     }
-    const extension = req.file.originalname.split(".").pop();
+    const extension = req.file.originalname.split(".").pop().toLowerCase();
+
     const pageCount = await pageCounter(filePath, extension);
     if (!pageCount) {
       if (filePath && fs.existsSync(filePath)) {
@@ -36,7 +37,7 @@ export const uploadFileToS3 = async (req, res) => {
       }
       logger.error("page count error");
       return res.status(500).json({
-        msg: "Internal server error!",
+        msg: "Error while getting page count!",
         success: false,
       });
     }
