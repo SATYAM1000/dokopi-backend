@@ -81,6 +81,16 @@ const xeroxStoreSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    instantDelivery: {
+      isEnabled: { type: Boolean, default: false },
+      duration: { type: String },
+      price: { type: Number },
+    },
+    homeDelivery: {
+      isEnabled: { type: Boolean, default: false },
+      duration: { type: String },
+      price: { type: Number },
+    },
   },
   { timestamps: true }
 );
