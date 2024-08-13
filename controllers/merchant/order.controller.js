@@ -309,6 +309,7 @@ export const changeOrderStatus = async (req, res) => {
     if (status === "delivered") {
       order.orderStatus = "delivered";
       order.isOrderActive = false;
+      order.orderDeliveredAt = Date.now();
     } else {
       order.orderStatus = status;
     }
