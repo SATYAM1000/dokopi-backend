@@ -188,10 +188,11 @@ export const cancelOrder = async (req, res) => {
 
     order.orderStatus = "rejected";
     order.isOrderActive = false;
+    order.orderRejectedAt = Date.now();
     await order.save();
 
     return res.status(200).json({
-      msg: "Order successfully canceled",
+      msg: "Order successfully cancelled",
       success: true,
     });
   } catch (error) {

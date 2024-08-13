@@ -88,6 +88,9 @@ const orderSchema = new mongoose.Schema(
     orderDeliveredAt: {
       type: Date,
     },
+    orderRejectedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
