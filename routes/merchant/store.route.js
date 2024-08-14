@@ -13,6 +13,9 @@ import {
   fetchXeroxStoreBankDetails,
   supportFormForXeroxStore,
   getStartedForm,
+  fetchHomeDeliveryAndInstantDeliveryConfigurations,
+  saveInstantDeliveryConfigurations,
+  saveHomeDeliveryConfigurations,
 } from "../../controllers/merchant/store.controller.js";
 import { verifyMerchant } from "../../middlewares/merchant.middleware.js";
 import { verifyUser } from "../../middlewares/user.middleware.js";
@@ -110,6 +113,27 @@ merchantStoreRouter.post(
   "/support/:storeId",
   verifyMerchant,
   supportFormForXeroxStore
+);
+
+// Endpoint to fetch status of instant delivery and home delivery of particular store
+merchantStoreRouter.get(
+  "/instant-delivery-status/:storeId",
+  verifyMerchant,
+  fetchHomeDeliveryAndInstantDeliveryConfigurations
+);
+
+// Endpoint to save instant delivery configurations of particular store
+merchantStoreRouter.put(
+  "/instant-delivery-configurations/:storeId",
+  verifyMerchant,
+  saveInstantDeliveryConfigurations
+);
+
+// Endpoint to save home delivery configurations of particular store
+merchantStoreRouter.put(
+  "/home-delivery-configurations/:storeId",
+  verifyMerchant,
+  saveHomeDeliveryConfigurations
 );
 
 export default merchantStoreRouter;

@@ -8,7 +8,6 @@ import { BankDetails } from "../../models/bank-details.model.js";
 import supportModel from "../../models/support.model.js";
 import { StoreHours } from "../../models/store-hours.model.js";
 
-
 export const getStartedForm = async (req, res) => {
   try {
     const { storeName, phoneNumber, storeEmail, userId } = req.body;
@@ -243,8 +242,6 @@ export const updateStoreBasicDetails = async (req, res) => {
     }
 
     if (store.storeOwner.toString() !== req.user._id.toString()) {
-      console.log("req.user._id is ", req.user._id);
-      console.log("store.storeOwner is ", store.storeOwner);
       return res.status(403).json({
         msg: "You are not authorized to perform this action!",
         success: false,
@@ -893,6 +890,125 @@ export const supportFormForXeroxStore = async (req, res) => {
 
     return res.status(201).json({
       msg: "Support form submitted successfully!",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store bank details: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const fetchHomeDeliveryAndInstantDeliveryConfigurations = async (
+  req,
+  res
+) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId).select(
+      "homeDelivery instantDelivery"
+    );
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      msg: "Home delivery and instant delivery configurations fetched successfully!",
+      success: true,
+      homeDeliveryConfigurations: store.homeDelivery,
+      instantDeliveryConfigurations: store.instantDelivery,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store bank details: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const saveInstantDeliveryConfigurations = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    store.instantDelivery.isEnabled = req.body.isEnabled;
+    store.instantDelivery.duration = req.body.duration;
+    store.instantDelivery.price = req.body.price;
+
+    await store.save();
+
+    return res.status(200).json({
+      msg: "Instant delivery configurations saved successfully!",
+      success: true,
+    });
+  } catch (error) {
+    logger.error(`Error while getting store bank details: ${error.message}`);
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+export const saveHomeDeliveryConfigurations = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+      });
+    }
+
+    const store = await XeroxStore.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+      });
+    }
+
+    store.homeDelivery.isEnabled = req.body.isEnabled;
+    store.homeDelivery.duration = req.body.duration;
+    store.homeDelivery.price = req.body.price;
+
+    await store.save();
+
+    return res.status(200).json({
+      msg: "Home delivery configurations saved successfully!",
       success: true,
     });
   } catch (error) {
