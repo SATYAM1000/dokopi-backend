@@ -1,6 +1,6 @@
 import dotenvSafe from "dotenv-safe";
 dotenvSafe.config({
-  allowEmptyValues: false,
+  allowEmptyValues: true,
   example: ".env.example",
 });
 
