@@ -1,12 +1,15 @@
-import dotenv from "dotenv";
-dotenv.config();
+import dotenvSafe from "dotenv-safe";
+dotenvSafe.config({
+  allowEmptyValues: false,
+  example: ".env.example",
+});
 
 import express from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import ExpressMongoSanitize from "express-mongo-sanitize";
-import compression from "compression"
+import compression from "compression";
 
 import hpp from "hpp";
 import { createServer } from "http";
@@ -14,6 +17,7 @@ import { Server } from "socket.io";
 import { connectDB } from "./config/db.config.js";
 import { logger } from "./config/logger.config.js";
 import { socketHandlers } from "./config/socket.config.js";
+import asyncHandler from "express-async-handler";
 
 const app = express();
 
@@ -25,11 +29,20 @@ export const io = new Server(server, {
   },
 });
 
-const limiter = rateLimit({
+const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 1000,
+  max: 500,
   message: "Too many requests from this IP, please try again in an hour!",
 });
+
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(globalLimiter);
+app.use(hpp());
+app.use(ExpressMongoSanitize());
+app.use(compression());
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -37,15 +50,6 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
-
-app.use(cors());
-app.use(helmet());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(limiter);
-app.use(hpp());
-app.use(ExpressMongoSanitize());
-app.use(compression());
 
 connectDB(process.env.DATABASE_URL)
   .then(() => {
@@ -57,10 +61,6 @@ connectDB(process.env.DATABASE_URL)
     logger.error(`MongoDB Error: ${error.message}`);
     process.exit(1);
   });
-
-app.get("/api/test", (req, res) => {
-  res.send("Hello, World!");
-});
 
 import { userRouter } from "./routes/user/user.route.js";
 app.use("/api/v1/user", userRouter);
@@ -98,4 +98,22 @@ app.use("/api/v1/store/pricing", xeroxStorePriceRouter);
 import { cartRouter } from "./routes/user/cart.route.js";
 app.use("/api/v1/user/cart", cartRouter);
 
+app.get("/api/test", (req, res) => {
+  res.send("Hello, From Server!");
+});
+
 socketHandlers(io, logger);
+
+process.on("SIGTERM", () => {
+  logger.info("SIGTERM signal received: closing HTTP server");
+  server.close(() => {
+    logger.info("HTTP server closed");
+  });
+});
+
+process.on("SIGINT", () => {
+  logger.info("SIGINT signal received: closing HTTP server");
+  server.close(() => {
+    logger.info("HTTP server closed");
+  });
+});
