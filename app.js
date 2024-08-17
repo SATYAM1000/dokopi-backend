@@ -20,7 +20,7 @@ const app = express();
 const server = createServer(app);
 export const io = new Server(server, {
   cors: {
-    origin: ["https://www.dokopi.com", "https://merchant.dokopi.com"],
+    origin: ["https://www.dokopi.com", "https://merchant.dokopi.com","https://api.dokopi.com"],
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
@@ -36,6 +36,7 @@ const corsOptions = {
     const allowedOrigins = [
       "https://www.dokopi.com",
       "https://merchant.dokopi.com",
+      "https://api.dokopi.com",
     ];
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
