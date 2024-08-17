@@ -98,9 +98,12 @@ app.use("/api/v1/store/pricing", xeroxStorePriceRouter);
 import { cartRouter } from "./routes/user/cart.route.js";
 app.use("/api/v1/user/cart", cartRouter);
 
-app.get("/api/test", (req, res) => {
-  res.send("Hello, From Server!");
-});
+app.get(
+  "/api/test",
+  asyncHandler(async (req, res) => {
+    res.send("Hello from the server side!");
+  })
+);
 
 socketHandlers(io, logger);
 
