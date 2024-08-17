@@ -1,8 +1,5 @@
-import dotenvSafe from "dotenv-safe";
-dotenvSafe.config({
-  allowEmptyValues: true,
-});
-
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
