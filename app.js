@@ -1,7 +1,6 @@
 import dotenvSafe from "dotenv-safe";
 dotenvSafe.config({
   allowEmptyValues: true,
-  example: ".env.example",
 });
 
 import express from "express";
