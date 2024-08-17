@@ -191,7 +191,6 @@ export const checkPaymentStatus = async (req, res) => {
     };
 
     const response = await axios.request(options);
-    console.log("response is ", response.data);
 
     if (response.data.success && response.data.data.state === 'COMPLETED') {
       const order = await Order.findOneAndUpdate(
