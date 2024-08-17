@@ -37,16 +37,11 @@ const globalLimiter = rateLimit({
   message: "Too many requests from this IP, please try again in an hour!",
 });
 
+const allowedOrigins = [/\.dokopi\.com$/];
+
 const corsOptions = {
   origin: (origin, callback) => {
-    const allowedOrigins = [
-      "https://www.dokopi.com",
-      "https://merchant.dokopi.com",
-      "https://api.dokopi.com",
-      "https://api.phonepe.com",
-      "http://localhost:3000",
-    ];
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.some((regex) => regex.test(origin))) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
@@ -54,6 +49,7 @@ const corsOptions = {
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
