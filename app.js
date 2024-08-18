@@ -2,12 +2,12 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
-import helmet from "helmet";
-import ExpressMongoSanitize from "express-mongo-sanitize";
-import compression from "compression";
+import rateLimit from "express-rate-limit"; // Middleware to limit request rate , prevent DDOS
+import helmet from "helmet"; // Security middleware to set HTTP headers
+import ExpressMongoSanitize from "express-mongo-sanitize"; // Middleware to prevent NoSQL injection attacks
+import compression from "compression"; // Middleware to compress responses
+import hpp from "hpp"; // Middleware to protect against HTTP parameter pollution
 
-import hpp from "hpp";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { connectDB } from "./config/db.config.js";
@@ -17,31 +17,41 @@ import asyncHandler from "express-async-handler";
 
 const app = express();
 
+// Trust the first proxy in the chain (if behind a proxy)
+//  This line is used in Express applications that are deployed behind a reverse proxy (like Nginx).
+//  It allows us to trust the proxy's IP address and avoid man-in-the-middle attacks.
+// When your Express app is deployed behind a reverse proxy, the client’s IP address isn’t directly visible to the Express app. Instead, the proxy forwards the request to your app, often including the original IP address of the client in the X-Forwarded-For header.
+// Client → Proxy (e.g., Nginx) → Express App.
+
+//By default, Express does not trust the X-Forwarded-For header because it could be spoofed. However, if you know that your app is behind a trusted proxy, you can instruct Express to trust this header. This way, Express can correctly determine the client’s original IP address
+app.set("trust proxy", 1);
+
 const server = createServer(app);
 export const io = new Server(server, {
   cors: {
     origin: [
       "https://www.dokopi.com",
       "https://merchant.dokopi.com",
-      "https://api.dokopi.com",
-      "https://api.phonepe.com",
       "http://localhost:3000",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
 
+
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 50,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, 
   message: "Too many requests from this IP, please try again in an hour!",
+  keyGenerator: (req) => {
+    return req.ip; // IP address of the client
+  },
 });
 
 const allowedOrigins = [
   "https://www.dokopi.com",
   "https://merchant.dokopi.com",
   "https://api.dokopi.com",
-  "https://api.phonepe.com",
   "http://localhost:3000",
 ];
 
@@ -53,9 +63,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(helmet());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(helmet()); // Set various HTTP headers for security
+app.use(express.json()); // Enable JSON parsing
+app.use(express.urlencoded({ extended: true })); // Enable URL-encoded parsing
 app.use(globalLimiter);
 app.use(hpp());
 app.use(ExpressMongoSanitize());
