@@ -33,14 +33,20 @@ export const io = new Server(server, {
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 50,
   message: "Too many requests from this IP, please try again in an hour!",
 });
 
-const allowedOrigins = [/\.dokopi\.com$/];
+const allowedOrigins = [
+  "https://www.dokopi.com",
+  "https://merchant.dokopi.com",
+  "https://api.dokopi.com",
+  "https://api.phonepe.com",
+  "http://localhost:3000",
+];
 
 const corsOptions = {
-  origin: "*",
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

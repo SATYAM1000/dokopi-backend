@@ -8,6 +8,8 @@ import { io } from "../../app.js";
 import { XeroxStore } from "../../models/store.model.js";
 import { User } from "../../models/user.model.js";
 import { Cart } from "../../models/cart.model.js";
+import { appendOrderToSheet } from "../../config/google-sheets.config.js";
+import { retryOperation } from "../../config/google-sheets.config.js";
 
 const merchantId =
   process.env.NODE_ENV === "production"
@@ -163,7 +165,7 @@ export const checkout = async (req, res) => {
 export const checkPaymentStatus = async (req, res) => {
   try {
     const { id: merchantTransactionId } = req.query;
-    
+
     if (!merchantTransactionId) {
       return res.status(400).json({
         success: false,
@@ -175,9 +177,10 @@ export const checkPaymentStatus = async (req, res) => {
     const sha256 = crypto.createHash("sha256").update(string).digest("hex");
     const checksum = `${sha256}###${keyIndex}`;
 
-    const baseURL = process.env.NODE_ENV === "production"
-      ? "https://api.phonepe.com/apis/hermes/pg/v1"
-      : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1";
+    const baseURL =
+      process.env.NODE_ENV === "production"
+        ? "https://api.phonepe.com/apis/hermes/pg/v1"
+        : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1";
 
     const options = {
       method: "GET",
@@ -192,7 +195,7 @@ export const checkPaymentStatus = async (req, res) => {
 
     const response = await axios.request(options);
 
-    if (response.data.success && response.data.data.state === 'COMPLETED') {
+    if (response.data.success && response.data.data.state === "COMPLETED") {
       const order = await Order.findOneAndUpdate(
         { phonePeTransactionId: merchantTransactionId },
         {
@@ -214,11 +217,17 @@ export const checkPaymentStatus = async (req, res) => {
           storeId: order.storeId,
         });
       }
+      try {
+        await retryOperation(() => appendOrderToSheet(order));
+      } catch (error) {
+        logger.error("Failed to save order to Google Sheets:", error);
+      }
 
-      const redirectUrl = process.env.NODE_ENV === "production"
-        ? `https://dokopi.com/payment/success?id=${merchantTransactionId}`
-        : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
-      
+      const redirectUrl =
+        process.env.NODE_ENV === "production"
+          ? `https://www.dokopi.com/payment/success?id=${merchantTransactionId}`
+          : `http://localhost:3000/payment/success?id=${merchantTransactionId}`;
+
       return res.redirect(redirectUrl);
     } else {
       await Order.findOneAndUpdate(
@@ -227,15 +236,16 @@ export const checkPaymentStatus = async (req, res) => {
         { new: true }
       );
 
-      const redirectUrl = process.env.NODE_ENV === "production"
-        ? `https://dokopi.com/payment/failure?id=${merchantTransactionId}`
-        : `http://localhost:3000/payment/failure?id=${merchantTransactionId}`;
-      
+      const redirectUrl =
+        process.env.NODE_ENV === "production"
+          ? `https://www.dokopi.com/payment/failure?id=${merchantTransactionId}`
+          : `http://localhost:3000/payment/failure?id=${merchantTransactionId}`;
+
       return res.redirect(redirectUrl);
     }
   } catch (error) {
     logger.error("Error while checking phonepe payment status: ", error);
-    
+
     // Update the order status to failed if there's an error
     try {
       await Order.findOneAndUpdate(
@@ -244,7 +254,10 @@ export const checkPaymentStatus = async (req, res) => {
         { new: true }
       );
     } catch (updateError) {
-      logger.error("Error while updating order status to failed: ", updateError);
+      logger.error(
+        "Error while updating order status to failed: ",
+        updateError
+      );
     }
 
     return res.status(500).json({
