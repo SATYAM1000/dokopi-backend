@@ -12,6 +12,7 @@ export const initializeMiddlewares = (app) => {
     "https://merchant.dokopi.com",
     "https://api.dokopi.com",
     "http://localhost:3000",
+    "http://localhost:3001",
   ];
 
   const corsOptions = {

@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 import { socketHandlers } from "./config/socket.config.js";
 import { logger } from "./config/logger.config.js";
 
-let io; 
+let io;
 
 export const createServer = (app) => {
   const server = httpCreateServer(app);
@@ -13,6 +13,7 @@ export const createServer = (app) => {
         "https://www.dokopi.com",
         "https://merchant.dokopi.com",
         "http://localhost:3000",
+        "http://localhost:3001",
       ],
       methods: ["GET", "POST", "PUT", "DELETE"],
     },

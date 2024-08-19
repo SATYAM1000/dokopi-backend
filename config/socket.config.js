@@ -1,6 +1,7 @@
 import { User } from "../models/user.model.js";
 
-const userSocketMap = new Map();
+export const userSocketMap = new Map();
+
 
 export const socketHandlers = (io, logger) => {
   io.on("connection", (socket) => {

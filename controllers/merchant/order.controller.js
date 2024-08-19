@@ -2,6 +2,8 @@ import { logger } from "../../config/logger.config.js";
 import mongoose from "mongoose";
 import { XeroxStore } from "../../models/store.model.js";
 import { Order } from "../../models/order.model.js";
+import { io } from "../../server.js";
+import { User } from "../../models/user.model.js";
 
 export const getXeroxStoreOrdersById = async (req, res) => {
   try {
@@ -132,6 +134,14 @@ export const isOrderViewed = async (req, res) => {
       order.orderStatus = "processing";
       await order.save();
 
+      const user = await User.findById(order.userId);
+      console.log(user.socketId);
+      io.to(user.socketId).emit("changeOrderStatus", {
+        orderId: order._id,
+        orderStatus: "processing",
+        userId: order.userId,
+      });
+
       return res.status(200).json({
         msg: "Order viewed successfully",
         success: true,
@@ -191,6 +201,13 @@ export const cancelOrder = async (req, res) => {
     order.orderRejectedAt = Date.now();
     await order.save();
 
+    const user = await User.findById(order.userId);
+    io.to(user.socketId).emit("changeOrderStatus", {
+      orderId: order._id,
+      orderStatus: "rejected",
+      userId: order.userId,
+    });
+
     return res.status(200).json({
       msg: "Order successfully cancelled",
       success: true,
@@ -234,9 +251,22 @@ export const toggleOrderStatus = async (req, res) => {
     switch (order.orderStatus) {
       case "printed":
         order.orderStatus = "processing";
+        const user = await User.findById(order.userId);
+        io.to(user.socketId).emit("changeOrderStatus", {
+          orderId: order._id,
+          orderStatus: "processing",
+          userId: order.userId,
+        });
+
         break;
       case "processing":
         order.orderStatus = "printed";
+        const user2 = await User.findById(order.userId);
+        io.to(user2.socketId).emit("changeOrderStatus", {
+          orderId: order._id,
+          orderStatus: "printed",
+          userId: order.userId,
+        });
         break;
       default:
         return res.status(400).json({
@@ -316,6 +346,12 @@ export const changeOrderStatus = async (req, res) => {
     }
 
     await order.save();
+    const user = await User.findById(order.userId);
+    io.to(user.socketId).emit("changeOrderStatus", {
+      orderId: order._id,
+      orderStatus: status,
+      userId: order.userId,
+    });
     return res.status(200).json({
       msg: "Order status changed successfully",
       success: true,
