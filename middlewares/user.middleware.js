@@ -6,14 +6,14 @@ const AUTH_ERROR_MESSAGE = "Please authenticate using a valid token!";
 export const verifyUser = async (req, res, next) => {
   try {
     const token = req.header("Authorization");
-    
+
     if (!token) {
       return res.status(401).json({
         msg: AUTH_ERROR_MESSAGE,
         success: false,
       });
     }
-    
+
     const jwtToken = token.split(" ")[1];
     if (!jwtToken) {
       return res.status(401).json({
@@ -23,7 +23,6 @@ export const verifyUser = async (req, res, next) => {
     }
     const decoded = await decodeJWT(jwtToken);
 
-  
     const user = await User.findById(decoded?.sub);
     if (!user) {
       return res.status(401).json({
@@ -31,7 +30,11 @@ export const verifyUser = async (req, res, next) => {
         success: false,
       });
     }
-    if (user.role !== "USER" && user.role !== "MERCHANT" && user.role !== "ADMIN") {
+    if (
+      user.role !== "USER" &&
+      user.role !== "MERCHANT" &&
+      user.role !== "ADMIN"
+    ) {
       return res.status(401).json({
         msg: "Invalid bearer token",
         success: false,

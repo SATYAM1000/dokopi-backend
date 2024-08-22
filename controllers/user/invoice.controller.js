@@ -96,7 +96,6 @@ async function deleteInvoiceFile(filePath) {
 }
 
 function generateInvoiceData(order, userInfo, storeInfo) {
-
   const userSelectedItems = order.cartItems.map((item) => {
     return {
       name: item.fileName,

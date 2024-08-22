@@ -5,7 +5,7 @@ export const globalErrorHandler = (err, req, res, next) => {
 
   // Log-Log the error
   logger.error(`Error: ${err.message}\nStack: ${err.stack}`);
-  
+
   res.status(statusCode).json({
     status,
     message: err.message,

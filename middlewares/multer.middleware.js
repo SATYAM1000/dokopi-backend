@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
         ".jpg",
         ".png",
         ".pptx",
-        ".jpeg"
+        ".jpeg",
       ];
       const fileExt = path.extname(file.originalname).toLowerCase(); // Convert extension to lowercase
 

@@ -197,7 +197,7 @@ export const cancelOrder = async (req, res) => {
     }
 
     order.orderStatus = "rejected";
-    // TODO: Order will be set to inactive after refund 
+    // TODO: Order will be set to inactive after refund
     // order.isOrderActive = false;
     order.orderRejectedAt = Date.now();
     await order.save();

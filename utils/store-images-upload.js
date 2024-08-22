@@ -13,7 +13,6 @@ const S3client = new S3Client({
   },
 });
 
-
 export const uploadXeroxStoreImagesToS3 = async (localFilePath) => {
   if (!localFilePath) {
     throw new Error("File path is required");
@@ -21,7 +20,7 @@ export const uploadXeroxStoreImagesToS3 = async (localFilePath) => {
 
   const fileStream = fs.createReadStream(localFilePath);
   const folderName = "xeroxstores";
-  const objectKey=`${folderName}/${path.basename(localFilePath)}`
+  const objectKey = `${folderName}/${path.basename(localFilePath)}`;
 
   const uploadParams = {
     Bucket: process.env.AWS_BUCKET_NAME,
@@ -30,7 +29,7 @@ export const uploadXeroxStoreImagesToS3 = async (localFilePath) => {
   };
 
   const uploadOptions = {
-    partSize: 100 * 1024 * 1024, 
+    partSize: 100 * 1024 * 1024,
     queueSize: 4,
   };
 

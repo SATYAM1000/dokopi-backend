@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "D:\\projects\\dokopi-xerox marketplace\\server\\logs\\.005547f89057130990108fb8c5d9cb61cb49b973-audit.json",
+    "files": [
+        {
+            "date": 1724363639369,
+            "name": "D:\\projects\\dokopi-xerox marketplace\\server\\logs\\2024-08-23.log",
+            "hash": "cb1fc11e80455aa4ae99f8fd97757f34eab34a8e45d3a870cd6016a8388a7481"
+        }
+    ],
+    "hashType": "sha256"
+}

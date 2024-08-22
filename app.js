@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import { config } from "./config/config.js";
 import express from "express";
 import { initializeMiddlewares } from "./middlewares.js";
 import { initializeRoutes } from "./routes.js";
@@ -13,21 +12,30 @@ const app = express();
 initializeMiddlewares(app);
 initializeRoutes(app);
 
-//Global error handler - should be after all routes
-app.use(globalErrorHandler);
+// 404 Error Handler
+app.use((req, res, next) => {
+  logger.warn(`404 Error: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    status: "fail",
+    message: "Resource not found. Please check the URL and try again.",
+  });
+});
 
-connectDB(process.env.DATABASE_URL)
+//Global error handler - must be after all routes
+app.use(globalErrorHandler);
+connectDB(config.DATABASE_URL)
   .then(() => {
     const server = createServer(app);
-    server.listen(process.env.PORT, () => {
-      logger.info(`Server running on port ${process.env.PORT}`);
+    server.listen(config.PORT, () => {
+      logger.info(`Server running on port ${config.PORT}`);
     });
   })
   .catch((error) => {
-    logger.error(`MongoDB Error: ${error.message}`);
+    logger.error(`MongoDB Error: ${error.message}`, { error });
     process.exit(1);
   });
 
+// Graceful shutdown
 process.on("SIGTERM", () => {
   logger.info("SIGTERM signal received: closing HTTP server");
   server.close(() => {

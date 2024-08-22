@@ -50,8 +50,7 @@ export const submitUserPhoneNumber = async (req, res) => {
 
 export const supportFormForUser = async (req, res) => {
   try {
-    const {_id} = req.user;
-    
+    const { _id } = req.user;
 
     const user = await User.findById(_id);
 
