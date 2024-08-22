@@ -29,7 +29,7 @@ export const initializeRoutes = (app) => {
   app.get(
     "/api/test",
     asyncHandler(async (req, res) => {
-      res.send("Hello from the server side!");
+      res.send("👋 Hello from the server side!");
     })
   );
 };

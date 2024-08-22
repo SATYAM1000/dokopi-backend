@@ -39,4 +39,5 @@ export const initializeMiddlewares = (app) => {
   app.use(ExpressMongoSanitize());
   app.use(compression());
   app.use(express.static("public", { maxAge: "1d" }));
+
 };
