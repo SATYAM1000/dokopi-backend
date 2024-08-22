@@ -11,6 +11,8 @@ import locationRouter from "./routes/location/locationfromname.js";
 import { xeroxStorePriceRouter } from "./routes/merchant/price.route.js";
 import { cartRouter } from "./routes/user/cart.route.js";
 import asyncHandler from "express-async-handler";
+import { logger } from "./config/logger.config.js";
+import quicker from "./utils/quicker.js";
 
 export const initializeRoutes = (app) => {
   app.use("/api/v1/user", userRouter);
@@ -27,9 +29,25 @@ export const initializeRoutes = (app) => {
   app.use("/api/v1/user/cart", cartRouter);
 
   app.get(
-    "/api/test",
+    "/api/v1/test",
     asyncHandler(async (req, res) => {
       res.send("👋 Hello from the server side!");
     })
   );
+
+  app.get("/api/v1/health", (req, res) => {
+    try {
+      const healthData = {
+        application: quicker.getApplicationHealth(),
+        system: quicker.getSystemHealth(),
+        timestamp: new Date().toISOString(),
+      };
+      res.status(200).json(healthData);
+    } catch (error) {
+      logger.error("Health check failed:", error);
+      res
+        .status(500)
+        .json({ message: "Internal Server Error", error: error.message });
+    }
+  });
 };
