@@ -1,26 +1,35 @@
 import { createServer as httpCreateServer } from "http";
-import { Server } from "socket.io";
+import { Server as SocketIOServer } from "socket.io";
 import { socketHandlers } from "./config/socket.config.js";
 import { logger } from "./config/logger.config.js";
+import { config } from "./config/config.js";
 
-let io;
+let io; // Socket.IO instance
 
 export const createServer = (app) => {
+  // Create the HTTP server using the Express app
   const server = httpCreateServer(app);
-  io = new Server(server, {
-    cors: {
-      origin: [
-        "https://www.dokopi.com",
-        "https://merchant.dokopi.com",
-        "http://localhost:3000",
-        "http://localhost:3001",
-      ],
-      methods: ["GET", "POST", "PUT", "DELETE"],
-    },
-  });
 
+  const allowedOrigins =
+    config.NODE_ENV === "production" ? config.ALLOWED_ORIGINS.split(",") : "*";
+
+  // Socket.IO configuration
+  const socketOptions = {
+    cors: {
+      origin: allowedOrigins,
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true,
+    },
+  };
+
+  // Initialize Socket.IO with CORS options
+  io = new SocketIOServer(server, socketOptions);
+
+  // Register socket handlers
   socketHandlers(io, logger);
-  return server;
+
+  return server; // Return the HTTP server instance
 };
 
-export { io }; // Export io so it can be used elsewhere in the application
+// Export io instance for use in other parts of the application
+export { io };
