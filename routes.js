@@ -40,6 +40,7 @@ export const initializeRoutes = (app) => {
       const healthData = {
         application: quicker.getApplicationHealth(),
         system: quicker.getSystemHealth(),
+        database: quicker.getDatabaseHealth(),
         timestamp: new Date().toISOString(),
       };
       res.status(200).json(healthData);
