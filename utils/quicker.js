@@ -1,6 +1,4 @@
 import os from "os";
-import path from "path";
-import fs from "fs";
 import mongoose from "mongoose";
 import { config } from "../config/config.js";
 

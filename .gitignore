@@ -6,6 +6,8 @@
 
 # Environment variables file
 .env
+.env.development
+.env.production
 
 # Built files
 /build
@@ -13,6 +15,7 @@
 
 # Log files
 *.log
+*.json
 
 # Editor/IDE files
 .vscode
