@@ -8,13 +8,14 @@ export const createErrorResponse = (error, req, statusCode = 500) => {
 
   const errorResponse = {
     success: false,
-    status: statusCode,
+    statusCode: statusCode,
     request: {
       ip: isDevelopment ? req.ip : null,
       method: req.method || null,
       url: req.url || null,
     },
     message: isErrorInstance ? error.message : responseMessages.ERROR,
+    data: null,
     stack:
       isDevelopment && isErrorInstance ? { error: error.stack } : undefined,
   };
@@ -26,7 +27,7 @@ export const createErrorResponse = (error, req, statusCode = 500) => {
   return errorResponse;
 };
 
-export const handleHttpError = (error, req, res, next) => {
-  const errorResponse = createErrorResponse(error, req, error.status || 500);
-  res.status(errorResponse.status).json(errorResponse);
+export const handleHttpError = (next, err, req, statusCode = 500) => {
+  const errorObj = createErrorResponse(err, req, statusCode);
+  return next(errorObj);
 };
