@@ -2,7 +2,6 @@ import { User } from "../models/user.model.js";
 
 export const userSocketMap = new Map();
 
-
 export const socketHandlers = (io, logger) => {
   io.on("connection", (socket) => {
     logger.info(`Socket connected: ${socket.id}`);
@@ -30,10 +29,10 @@ export const socketHandlers = (io, logger) => {
 
     socket.on("disconnect", async () => {
       try {
-        const userId = getUserIdBySocketId(socket.id); // Helper function to find userId by socketId
+        const userId = getUserIdBySocketId(socket.id); 
 
         if (userId) {
-          // Remove from in-memory map
+          
           userSocketMap.delete(userId);
 
           // Update the user document in the database
