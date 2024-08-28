@@ -11,10 +11,7 @@ export const connectDB = async (DATABASE_URL) => {
   }
 
   try {
-    const connectionInstance = await mongoose.connect(DATABASE_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const connectionInstance = await mongoose.connect(DATABASE_URL);
     console.log("Connected to MongoDB: ", connectionInstance.connection.host);
     logger.info(`MongoDB Connected: ${connectionInstance.connection.host}`, {
       meta: {
@@ -24,7 +21,11 @@ export const connectDB = async (DATABASE_URL) => {
       },
     });
   } catch (error) {
-    logger.error(`MongoDB connection error: ${error.message}`);
+    logger.error(`MongoDB connection error: ${error.message}`, {
+      meta: {
+        error,
+      },
+    });
     process.exit(1);
   }
 };

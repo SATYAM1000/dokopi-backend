@@ -6,9 +6,9 @@
     "auditLog": "D:\\projects\\dokopi-xerox marketplace\\server\\logs\\.5ab4dad1cbc1b78514ad241e55096a35c6fe05ca-audit.json",
     "files": [
         {
-            "date": 1724364955344,
-            "name": "D:\\projects\\dokopi-xerox marketplace\\server\\logs\\2024-08-23.log",
-            "hash": "7d559709a8e7a4b29ebd623f11e10ef8b433a995001437eee241e88ec3289294"
+            "date": 1724789806536,
+            "name": "D:\\projects\\dokopi-xerox marketplace\\server\\logs\\2024-08-28.log",
+            "hash": "ce4786e726b35b27b328ebc7e637840fbc7666d8fc005ecaf7e23cc7b5f62741"
         }
     ],
     "hashType": "sha256"
