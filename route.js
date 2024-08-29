@@ -41,11 +41,14 @@ export const initializeRoutes = (app) => {
   // Other routes
   app.use(`${apiBasePath}/invoice`, invoiceRouter);
   app.use(apiBasePath, locationRouter);
-  
+
   // Test route
-  app.get(`${apiBasePath}/test`, asyncHandler(async (req, res) => {
-    res.send("👋 Hello from the server side!");
-  }));
+  app.get(
+    `${apiBasePath}/test`,
+    asyncHandler(async (req, res) => {
+      res.send("<h1 style='color:blue'>👋 Hello from the server side!</h1>");
+    })
+  );
 
   // Health check route
   app.get(`${apiBasePath}/health`, (req, res) => {
