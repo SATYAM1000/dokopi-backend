@@ -210,19 +210,24 @@ export const cancelOrder = async (req, res) => {
       userId: order.userId,
     });
 
-    const userInfo = await User.findById(order.userId);
-    const sendMessageToUser = "91" + userInfo.phone;
+    try {
+      const sendMessageToUser = "91" + user.phone;
+      const currentStore = await XeroxStore.findById(order.storeId);
 
-    const userOrderDetails = {
-      orderStatus: "Cancelled",
-      userName: userInfo.name,
-      orderNumber: order.orderNumber,
-      storeName: currentStore.storeDetails.storeName,
-      filesSent: order.cartItems.length,
-      amountPaid: order.totalPrice,
-    };
-    await sendWhatsAppNotificationToUser(sendMessageToUser, userOrderDetails);
-
+      const userOrderDetails = {
+        orderStatus: "Cancelled",
+        userName: user.name,
+        orderNumber: order.orderNumber,
+        storeName: currentStore.storeDetails.storeName,
+        filesSent: order.cartItems.length,
+        amountPaid: order.totalPrice,
+      };
+      await sendWhatsAppNotificationToUser(sendMessageToUser, userOrderDetails);
+    } catch (error) {
+      logger.error(
+        `Error while sending WhatsApp notification: ${error.message}`
+      );
+    }
     return res.status(200).json({
       msg: "Order successfully cancelled",
       success: true,
@@ -283,18 +288,27 @@ export const toggleOrderStatus = async (req, res) => {
           userId: order.userId,
         });
 
-        const userInfo = await User.findById(order.userId);
-        const sendMessageToUser = "91" + userInfo.phone;
+        try {
+          const sendMessageToUser = "91" + user.phone;
+          const currentStore = await XeroxStore.findById(order.storeId);
 
-        const userOrderDetails = {
-          orderStatus: "Printed",
-          userName: userInfo.name,
-          orderNumber: order.orderNumber,
-          storeName: currentStore.storeDetails.storeName,
-          filesSent: order.cartItems.length,
-          amountPaid: order.totalPrice,
-        };
-        await sendWhatsAppNotificationToUser(sendMessageToUser, userOrderDetails);
+          const userOrderDetails = {
+            orderStatus: "Printed",
+            userName: user.name,
+            orderNumber: order.orderNumber,
+            storeName: currentStore.storeDetails.storeName,
+            filesSent: order.cartItems.length,
+            amountPaid: order.totalPrice,
+          };
+          await sendWhatsAppNotificationToUser(
+            sendMessageToUser,
+            userOrderDetails
+          );
+        } catch (error) {
+          logger.error(
+            `Error while sending WhatsApp notification: ${error.message}`
+          );
+        }
         break;
       default:
         return res.status(400).json({
