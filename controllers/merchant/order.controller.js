@@ -4,6 +4,7 @@ import { XeroxStore } from "../../models/store.model.js";
 import { Order } from "../../models/order.model.js";
 import { io } from "../../server.js";
 import { User } from "../../models/user.model.js";
+import { sendWhatsAppNotificationToUser } from "../../services/whatsapp.js";
 
 export const getXeroxStoreOrdersById = async (req, res) => {
   try {
@@ -209,6 +210,19 @@ export const cancelOrder = async (req, res) => {
       userId: order.userId,
     });
 
+    const userInfo = await User.findById(order.userId);
+    const sendMessageToUser = "91" + userInfo.phone;
+
+    const userOrderDetails = {
+      orderStatus: "Cancelled",
+      userName: userInfo.name,
+      orderNumber: order.orderNumber,
+      storeName: currentStore.storeDetails.storeName,
+      filesSent: order.cartItems.length,
+      amountPaid: order.totalPrice,
+    };
+    await sendWhatsAppNotificationToUser(sendMessageToUser, userOrderDetails);
+
     return res.status(200).json({
       msg: "Order successfully cancelled",
       success: true,
@@ -268,6 +282,19 @@ export const toggleOrderStatus = async (req, res) => {
           orderStatus: "printed",
           userId: order.userId,
         });
+
+        const userInfo = await User.findById(order.userId);
+        const sendMessageToUser = "91" + userInfo.phone;
+
+        const userOrderDetails = {
+          orderStatus: "Printed",
+          userName: userInfo.name,
+          orderNumber: order.orderNumber,
+          storeName: currentStore.storeDetails.storeName,
+          filesSent: order.cartItems.length,
+          amountPaid: order.totalPrice,
+        };
+        await sendWhatsAppNotificationToUser(sendMessageToUser, userOrderDetails);
         break;
       default:
         return res.status(400).json({

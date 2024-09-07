@@ -118,6 +118,5 @@ async function retryOperation(operation, retries = MAX_RETRIES) {
   }
 }
 
-await setColumnHeadings();
 
 export { appendOrderToSheet, setColumnHeadings, retryOperation };

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { logger } from "../config/logger.config";
+import { logger } from "../config/logger.config.js";
 
 export const sendWhatsAppNotificationToXeroxStoreOwner = async (
   sendMessageTo,
@@ -18,9 +18,9 @@ export const sendWhatsAppNotificationToXeroxStoreOwner = async (
         to: sendMessageTo,
         type: "template",
         template: {
-          name: process.env.WHATSAPP_TEMPLATE_NAME_FOR_XEROX_STORE,
+          name: `${process.env.XEROX_STORE_TEMPLATE_NAME}`,
           language: {
-            code: "en",
+            code: "en_US",
           },
           components: [
             {
@@ -37,7 +37,7 @@ export const sendWhatsAppNotificationToXeroxStoreOwner = async (
               parameters: [
                 {
                   type: "text",
-                  text: "DoKopi", // Adjust if needed to be dynamic
+                  text: newOrderDetails.storeName,
                 },
                 {
                   type: "text",
@@ -56,12 +56,14 @@ export const sendWhatsAppNotificationToXeroxStoreOwner = async (
 
     return response.data;
   } catch (error) {
+    console.error("Error sending WhatsApp notification:", error);
     logger.error(
       "Error sending WhatsApp notification to xerox store owner:",
       error
     );
   }
 };
+
 
 export const sendWhatsAppNotificationToUser = async (
   sendMessageTo,
@@ -80,9 +82,9 @@ export const sendWhatsAppNotificationToUser = async (
         to: sendMessageTo,
         type: "template",
         template: {
-          name: process.env.WHATSAPP_TEMPLATE_NAME_FOR_USER,
+          name: `${process.env.USER_ORDER_STATUS_TEMPLATE_NAME}`,
           language: {
-            code: "en",
+            code: "en_US",
           },
           components: [
             {
@@ -129,6 +131,7 @@ export const sendWhatsAppNotificationToUser = async (
     });
     return response.data;
   } catch (error) {
+    console.error("Error sending WhatsApp notification:", error);
     logger.error("Error sending WhatsApp notification to user:", error);
   }
 };

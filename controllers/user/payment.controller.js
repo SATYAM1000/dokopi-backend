@@ -11,6 +11,10 @@ import { User } from "../../models/user.model.js";
 import { Cart } from "../../models/cart.model.js";
 import { appendOrderToSheet } from "../../config/google-sheets.config.js";
 import { retryOperation } from "../../config/google-sheets.config.js";
+import {
+  sendWhatsAppNotificationToXeroxStoreOwner,
+  sendWhatsAppNotificationToUser,
+} from "../../services/whatsapp.js";
 
 const merchantId =
   process.env.NODE_ENV === "production"
@@ -220,6 +224,33 @@ export const checkPaymentStatus = async (req, res) => {
       }
       try {
         await retryOperation(() => appendOrderToSheet(order));
+
+        // Send WhatsApp message to store owner
+        const sendMessageTo = "91" + currentStore.storeDetails.storePhoneNumber;
+        const newOrderDetails = {
+          orderNumber: order.orderNumber,
+          storeName: currentStore.storeDetails.storeName,
+          userFilesSent: cartItems.cartItems.length,
+          userAmountPaid: order.totalPrice,
+        };
+        await sendWhatsAppNotificationToXeroxStoreOwner(
+          sendMessageTo,
+          newOrderDetails
+        );
+
+        // Send WhatsApp message to user
+        const userInfo = await User.findById(order.userId);
+        const sendMessageToUser = "91" + userInfo.phone;
+
+        const userOrderDetails = {
+          orderStatus: "pending",
+          userName: userInfo.name,
+          orderNumber: order.orderNumber,
+          storeName: currentStore.storeDetails.storeName,
+          filesSent: cartItems.cartItems.length,
+          amountPaid: order.totalPrice,
+        };
+        await sendWhatsAppNotificationToUser(sendMessageToUser, userOrderDetails);
       } catch (error) {
         logger.error("Failed to save order to Google Sheets:", error);
       }
