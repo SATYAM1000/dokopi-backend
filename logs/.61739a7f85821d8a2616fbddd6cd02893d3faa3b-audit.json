@@ -6,19 +6,24 @@
     "auditLog": "D:\\projects\\dokopi\\server\\logs\\.61739a7f85821d8a2616fbddd6cd02893d3faa3b-audit.json",
     "files": [
         {
-            "date": 1725490338104,
-            "name": "D:\\projects\\dokopi\\server\\logs\\2024-09-05.log",
-            "hash": "5b69ec5ee41943dd1966096be01de0e76819e2fde81be25590408b2df528d1ab"
-        },
-        {
-            "date": 1725561039802,
-            "name": "D:\\projects\\dokopi\\server\\logs\\2024-09-06.log",
-            "hash": "919a615352944ccb1028639d203fc9acd740c6e18f9f31629f2072e1e61dc458"
-        },
-        {
             "date": 1725739536426,
             "name": "D:\\projects\\dokopi\\server\\logs\\2024-09-08.log",
             "hash": "b9a927324d1bec470ae999cfa7919c305b30c985d80abf9bec653319eb49e71f"
+        },
+        {
+            "date": 1725870774736,
+            "name": "D:\\projects\\dokopi\\server\\logs\\2024-09-09.log",
+            "hash": "10830f2fc0dc96276429be1858c733bb0a0df1ae58d3752b878e38a0108fc106"
+        },
+        {
+            "date": 1725911615482,
+            "name": "D:\\projects\\dokopi\\server\\logs\\2024-09-10.log",
+            "hash": "26a2ec9569fc0892a97761db3e8573230b16504676fcfcec5acc4c0c43aad313"
+        },
+        {
+            "date": 1725998490003,
+            "name": "D:\\projects\\dokopi\\server\\logs\\2024-09-11.log",
+            "hash": "a24e786a2d3adcf1c2dd333afe64c0d531e25876999de854daf3c874500b2bd8"
         }
     ],
     "hashType": "sha256"

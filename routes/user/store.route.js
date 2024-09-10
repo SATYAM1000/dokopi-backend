@@ -1,4 +1,5 @@
 import {
+  checkIsXeroxStoreOpen,
   fetchNearestStores,
   fetchSingleStoreDetailsById,
   getAllStores,
@@ -23,5 +24,8 @@ userStoreRouter.get("/all", getAllStores);
 
 // Endpoint to get details for seo purpose (PUBLIC ENDPOINT)
 userStoreRouter.get("/:storeId", getSingleStoreDetailForSEO);
+
+// Endpoint to check is xerox store open
+userStoreRouter.get("/is-open/:storeId", checkIsXeroxStoreOpen);
 
 export default userStoreRouter;

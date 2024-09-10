@@ -2,7 +2,7 @@ import { logger } from "../../config/logger.config.js";
 import { XeroxStore } from "../../models/store.model.js";
 import { StoreReview } from "../../models/review.model.js";
 import mongoose from "mongoose";
-import { populate } from "dotenv";
+import { isStoreOpen } from "../../utils/is-store-open.js";
 
 export const fetchNearestStores = async (req, res) => {
   try {
@@ -433,6 +433,53 @@ export const getSingleStoreDetailForSEO = async (req, res) => {
     logger.error(
       `Error while getting single store detail for SEO: ${error.message}`
     );
+    return res.status(500).json({
+      msg: "Internal server error!",
+      error: error.message,
+      success: false,
+      data: null,
+    });
+  }
+};
+
+export const checkIsXeroxStoreOpen = async (req, res) => {
+  try {
+    const storeId = req.params.storeId;
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        msg: "Invalid store id!",
+        success: false,
+        data: null,
+      });
+    }
+
+    const store = await XeroxStore.findOne({
+      _id: storeId,
+      "storeStatus.isStoreVerified": true,
+    })
+      .select("_id")
+      .populate({
+        path: "storeTiming",
+        select: "-createdAt -updatedAt -__v",
+      });
+
+    if (!store) {
+      return res.status(404).json({
+        msg: "Store not found!",
+        success: false,
+        data: null,
+      });
+    }
+
+    const storeStatus = isStoreOpen(store?.storeTiming);
+
+    return res.status(200).json({
+      msg: "Store details fetched successfully!",
+      success: true,
+      data: storeStatus,
+    });
+  } catch (error) {
+    logger.error(`Error while checking if store is open: ${error.message}`);
     return res.status(500).json({
       msg: "Internal server error!",
       error: error.message,
