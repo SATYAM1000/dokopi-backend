@@ -477,6 +477,7 @@ export const checkIsXeroxStoreOpen = async (req, res) => {
       msg: "Store details fetched successfully!",
       success: true,
       data: storeStatus,
+      currentTime: new Date().toLocaleString(),
     });
   } catch (error) {
     logger.error(`Error while checking if store is open: ${error.message}`);
