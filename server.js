@@ -4,7 +4,7 @@ import { socketHandlers } from "./config/socket.config.js";
 import { logger } from "./config/logger.config.js";
 import { config } from "./config/config.js";
 
-let io; // Socket.IO instance
+let io; 
 
 export const createServer = (app) => {
   // Create the HTTP server using the Express app

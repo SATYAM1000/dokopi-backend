@@ -18,7 +18,8 @@ const __dirname = path.dirname(__filename);
 
 const numCPUs = os.cpus().length; // Get the number of available CPU cores
 
-if (cluster.isPrimary) {
+// Check if clustering should be used (if more than 1 CPU core)
+if (numCPUs > 1 && cluster.isPrimary) {
   // If the current process is the primary (master) process
   logger.info(`Primary process ${process.pid} is running`);
 
@@ -33,7 +34,7 @@ if (cluster.isPrimary) {
     cluster.fork();
   });
 } else {
-  // If the current process is a worker process
+  // Run in a single process if single-core or non-primary
 
   const app = express();
 
@@ -63,9 +64,7 @@ if (cluster.isPrimary) {
     .then(() => {
       const server = createServer(app);
       server.listen(config.PORT, () => {
-        logger.info(
-          `Worker ${process.pid} started and running on port ${config.PORT}`
-        );
+        logger.info(`Server started and running on port ${config.PORT}`);
       });
 
       // Graceful shutdown handling
